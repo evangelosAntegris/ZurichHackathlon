@@ -21,9 +21,11 @@ export function ClientSidebar({ selectedConversation, onConversationSelect }: Cl
   useEffect(() => {
     const loadClientData = async () => {
       try {
-        // For now, we'll load the first client (Alice Smith)
-        const clientData = await DataService.getClientById("client-1")
-        const conversationData = await DataService.getConversationsByClientId("client-1")
+        const clients = await DataService.getAllClients()
+        if (!clients || clients.length === 0) throw new Error('No clients found')
+        const clientId = clients[0].id
+        const clientData = await DataService.getClientById(clientId)
+        const conversationData = await DataService.getConversationsByClientId(clientId)
 
         setClient(clientData)
         setConversations(conversationData)

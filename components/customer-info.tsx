@@ -16,10 +16,14 @@ export function CustomerInfo() {
   useEffect(() => {
     const loadCustomerInfo = async () => {
       try {
+        const clients = await DataService.getAllClients()
+        if (!clients || clients.length === 0) throw new Error('No clients found')
+        const clientId = clients[0].id
+
         const [profBg, finPref, commPref] = await Promise.all([
-          DataService.getProfessionalBackgroundByClientId("client-1"),
-          DataService.getFinancialPreferencesByClientId("client-1"),
-          DataService.getCommunicationPreferencesByClientId("client-1"),
+          DataService.getProfessionalBackgroundByClientId(clientId),
+          DataService.getFinancialPreferencesByClientId(clientId),
+          DataService.getCommunicationPreferencesByClientId(clientId),
         ])
 
         setProfessionalBackground(profBg)

@@ -42,7 +42,10 @@ export function ActionsPanel() {
   useEffect(() => {
     const loadActions = async () => {
       try {
-        const actions = await DataService.getRecommendedActionsByClientId("client-1")
+        const clients = await DataService.getAllClients()
+        if (!clients || clients.length === 0) throw new Error('No clients found')
+        const clientId = clients[0].id
+        const actions = await DataService.getRecommendedActionsByClientId(clientId)
         setRecommendedActions(actions)
       } catch (error) {
         console.error("Failed to load recommended actions:", error)

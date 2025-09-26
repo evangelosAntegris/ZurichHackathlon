@@ -20,9 +20,14 @@ export default function UBSDashboard() {
   useEffect(() => {
     const loadClientProfile = async () => {
       try {
-        // Using Alice Smith's ID from mock data
-        const profile = await DataService.getClientProfile("1")
-        setClientProfile(profile)
+        // Fetch first available client and load profile
+        const clients = await DataService.getAllClients()
+        if (clients && clients.length > 0) {
+          const profile = await DataService.getClientProfile(clients[0].id)
+          setClientProfile(profile)
+        } else {
+          setClientProfile(null)
+        }
       } catch (error) {
         console.error("Failed to load client profile:", error)
       }

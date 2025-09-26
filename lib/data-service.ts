@@ -10,227 +10,280 @@ import type {
   ClientProfile,
 } from "./types"
 
-import {
-  mockClients,
-  mockConversations,
-  mockProfessionalBackgrounds,
-  mockFinancialPreferences,
-  mockCommunicationPreferences,
-  mockRecentInteractions,
-  mockUpcomingMeetings,
-  mockRecommendedActions,
-} from "./mock-data"
+import { createClient } from '@supabase/supabase-js'
 
-// import { createClient } from '@supabase/supabase-js'
-//
-// const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-// const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-// const supabase = createClient(supabaseUrl, supabaseKey)
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient(supabaseUrl, supabaseKey)
 
-// Simulate async database calls with delays
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+// Helper function to handle Supabase errors
+const handleError = (error: any, context: string) => {
+  console.error(`Error in ${context}:`, error)
+  throw new Error(`Failed to ${context}: ${error.message}`)
+}
+
+// ============================
+// Row mappers (snake_case -> camelCase)
+// ============================
+
+const calcAge = (dob: string) => {
+  const d = new Date(dob)
+  const diff = Date.now() - d.getTime()
+  const ageDate = new Date(diff)
+  return Math.abs(ageDate.getUTCFullYear() - 1970)
+}
+
+const mapClient = (row: any): Client => {
+  const dateOfBirth = row.dateOfBirth ?? row.date_of_birth
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    dateOfBirth,
+    age: row.age ?? calcAge(dateOfBirth),
+    maritalStatus: row.maritalStatus ?? row.marital_status ?? '',
+    riskProfile: row.riskProfile ?? row.risk_profile ?? '',
+    lastContact: row.lastContact ?? row.last_contact ?? '',
+    aum: row.aum ?? '',
+    additionalInfo: row.additionalInfo ?? row.additional_info ?? '',
+    avatar: row.avatar ?? row.avatar_url ?? undefined,
+    createdAt: row.createdAt ?? row.created_at,
+    updatedAt: row.updatedAt ?? row.updated_at,
+  }
+}
+
+const mapConversation = (row: any): Conversation => ({
+  id: row.id,
+  clientId: row.clientId ?? row.client_id,
+  title: row.title,
+  date: row.date,
+  duration: row.duration ?? '',
+  type: row.type,
+  summary: row.summary ?? undefined,
+  transcript: row.transcript ?? undefined,
+  createdAt: row.createdAt ?? row.created_at,
+  updatedAt: row.updatedAt ?? row.updated_at,
+})
+
+const mapProfessionalBackground = (row: any): ProfessionalBackground => ({
+  id: row.id,
+  clientId: row.clientId ?? row.client_id,
+  occupation: row.occupation ?? '',
+  education: row.education ?? '',
+  industry: row.industry ?? '',
+  createdAt: row.createdAt ?? row.created_at,
+  updatedAt: row.updatedAt ?? row.updated_at,
+})
+
+const mapFinancialPreferences = (row: any): FinancialPreferences => ({
+  id: row.id,
+  clientId: row.clientId ?? row.client_id,
+  investmentStyle: row.investmentStyle ?? row.investment_style ?? '',
+  esgPreference: row.esgPreference ?? row.esg_preference ?? '',
+  liquidityNeeds: row.liquidityNeeds ?? row.liquidity_needs ?? '',
+  createdAt: row.createdAt ?? row.created_at,
+  updatedAt: row.updatedAt ?? row.updated_at,
+})
+
+const mapCommunicationPreferences = (row: any): CommunicationPreferences => ({
+  id: row.id,
+  clientId: row.clientId ?? row.client_id,
+  preferredContact: row.preferredContact ?? row.preferred_contact ?? '',
+  meetingFrequency: row.meetingFrequency ?? row.meeting_frequency ?? '',
+  reportDetailLevel: row.reportDetailLevel ?? row.report_detail_level ?? '',
+  createdAt: row.createdAt ?? row.created_at,
+  updatedAt: row.updatedAt ?? row.updated_at,
+})
+
+const mapRecentInteraction = (row: any): RecentInteraction => ({
+  id: row.id,
+  clientId: row.clientId ?? row.client_id,
+  date: row.date,
+  description: row.description,
+  type: row.type,
+  createdAt: row.createdAt ?? row.created_at,
+})
+
+const mapUpcomingMeeting = (row: any): UpcomingMeeting => ({
+  id: row.id,
+  clientId: row.clientId ?? row.client_id,
+  date: row.date,
+  title: row.title,
+  type: row.type,
+  description: row.description ?? undefined,
+  createdAt: row.createdAt ?? row.created_at,
+})
+
+const mapRecommendedAction = (row: any): RecommendedAction => ({
+  id: row.id,
+  clientId: row.clientId ?? row.client_id,
+  title: row.title,
+  description: row.description,
+  priority: row.priority,
+  category: row.category,
+  completed: row.completed,
+  dueDate: row.dueDate ?? row.due_date ?? undefined,
+  createdAt: row.createdAt ?? row.created_at,
+  updatedAt: row.updatedAt ?? row.updated_at,
+})
 
 export class DataService {
   // Client operations
   static async getAllClients(): Promise<Client[]> {
-    // const { data, error } = await supabase
-    //   .from('clients')
-    //   .select('*')
-    //   .order('name', { ascending: true })
-    //
-    // if (error) {
-    //   console.error('Error fetching clients:', error)
-    //   throw new Error('Failed to fetch clients')
-    // }
-    //
-    // return data || []
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('name', { ascending: true })
 
-    await delay(100)
-    return mockClients
+    if (error) {
+      return handleError(error, 'fetch clients')
+    }
+
+    return (data || []).map(mapClient)
   }
 
   static async getClientById(clientId: string): Promise<Client | null> {
-    // const { data, error } = await supabase
-    //   .from('clients')
-    //   .select('*')
-    //   .eq('id', clientId)
-    //   .single()
-    //
-    // if (error) {
-    //   if (error.code === 'PGRST116') return null // No rows returned
-    //   console.error('Error fetching client:', error)
-    //   throw new Error('Failed to fetch client')
-    // }
-    //
-    // return data
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .single()
 
-    await delay(50)
-    return mockClients.find((client) => client.id === clientId) || null
+    if (error) {
+      if (error.code === 'PGRST116') return null // No rows returned
+      return handleError(error, 'fetch client')
+    }
+
+    return data ? mapClient(data) : null
   }
 
   // Conversation operations
   static async getConversationsByClientId(clientId: string): Promise<Conversation[]> {
-    // const { data, error } = await supabase
-    //   .from('conversations')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .order('date', { ascending: false })
-    //
-    // if (error) {
-    //   console.error('Error fetching conversations:', error)
-    //   throw new Error('Failed to fetch conversations')
-    // }
-    //
-    // return data || []
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('date', { ascending: false })
 
-    await delay(100)
-    return mockConversations.filter((conv) => conv.clientId === clientId)
+    if (error) {
+      return handleError(error, 'fetch conversations')
+    }
+
+    return (data || []).map(mapConversation)
   }
 
   static async getConversationById(conversationId: string): Promise<Conversation | null> {
-    // const { data, error } = await supabase
-    //   .from('conversations')
-    //   .select('*')
-    //   .eq('id', conversationId)
-    //   .single()
-    //
-    // if (error) {
-    //   if (error.code === 'PGRST116') return null
-    //   console.error('Error fetching conversation:', error)
-    //   throw new Error('Failed to fetch conversation')
-    // }
-    //
-    // return data
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('id', conversationId)
+      .single()
 
-    await delay(50)
-    return mockConversations.find((conv) => conv.id === conversationId) || null
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      return handleError(error, 'fetch conversation')
+    }
+
+    return data ? mapConversation(data) : null
   }
 
   // Professional background operations
   static async getProfessionalBackgroundByClientId(clientId: string): Promise<ProfessionalBackground | null> {
-    // const { data, error } = await supabase
-    //   .from('professional_backgrounds')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .single()
-    //
-    // if (error) {
-    //   if (error.code === 'PGRST116') return null
-    //   console.error('Error fetching professional background:', error)
-    //   throw new Error('Failed to fetch professional background')
-    // }
-    //
-    // return data
+    const { data, error } = await supabase
+      .from('professional_backgrounds')
+      .select('*')
+      .eq('client_id', clientId)
+      .single()
 
-    await delay(50)
-    return mockProfessionalBackgrounds.find((bg) => bg.clientId === clientId) || null
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      return handleError(error, 'fetch professional background')
+    }
+
+    return data
   }
 
   // Financial preferences operations
   static async getFinancialPreferencesByClientId(clientId: string): Promise<FinancialPreferences | null> {
-    // const { data, error } = await supabase
-    //   .from('financial_preferences')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .single()
-    //
-    // if (error) {
-    //   if (error.code === 'PGRST116') return null
-    //   console.error('Error fetching financial preferences:', error)
-    //   throw new Error('Failed to fetch financial preferences')
-    // }
-    //
-    // return data
+    const { data, error } = await supabase
+      .from('financial_preferences')
+      .select('*')
+      .eq('client_id', clientId)
+      .single()
 
-    await delay(50)
-    return mockFinancialPreferences.find((pref) => pref.clientId === clientId) || null
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      return handleError(error, 'fetch financial preferences')
+    }
+
+    return data
   }
 
   // Communication preferences operations
   static async getCommunicationPreferencesByClientId(clientId: string): Promise<CommunicationPreferences | null> {
-    // const { data, error } = await supabase
-    //   .from('communication_preferences')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .single()
-    //
-    // if (error) {
-    //   if (error.code === 'PGRST116') return null
-    //   console.error('Error fetching communication preferences:', error)
-    //   throw new Error('Failed to fetch communication preferences')
-    // }
-    //
-    // return data
+    const { data, error } = await supabase
+      .from('communication_preferences')
+      .select('*')
+      .eq('client_id', clientId)
+      .single()
 
-    await delay(50)
-    return mockCommunicationPreferences.find((pref) => pref.clientId === clientId) || null
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      return handleError(error, 'fetch communication preferences')
+    }
+
+    return data
   }
 
   // Recent interactions operations
   static async getRecentInteractionsByClientId(clientId: string): Promise<RecentInteraction[]> {
-    // const { data, error } = await supabase
-    //   .from('recent_interactions')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .order('date', { ascending: false })
-    //
-    // if (error) {
-    //   console.error('Error fetching recent interactions:', error)
-    //   throw new Error('Failed to fetch recent interactions')
-    // }
-    //
-    // return data || []
+    const { data, error } = await supabase
+      .from('recent_interactions')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('date', { ascending: false })
 
-    await delay(100)
-    return mockRecentInteractions.filter((interaction) => interaction.clientId === clientId)
+    if (error) {
+      return handleError(error, 'fetch recent interactions')
+    }
+
+    return data || []
   }
 
   // Upcoming meetings operations
   static async getUpcomingMeetingsByClientId(clientId: string): Promise<UpcomingMeeting[]> {
-    // const { data, error } = await supabase
-    //   .from('upcoming_meetings')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .order('date', { ascending: true })
-    //
-    // if (error) {
-    //   console.error('Error fetching upcoming meetings:', error)
-    //   throw new Error('Failed to fetch upcoming meetings')
-    // }
-    //
-    // return data || []
+    const { data, error } = await supabase
+      .from('upcoming_meetings')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('date', { ascending: true })
 
-    await delay(100)
-    return mockUpcomingMeetings.filter((meeting) => meeting.clientId === clientId)
+    if (error) {
+      return handleError(error, 'fetch upcoming meetings')
+    }
+
+    return data || []
   }
 
   // Recommended actions operations
   static async getRecommendedActionsByClientId(clientId: string): Promise<RecommendedAction[]> {
-    // const { data, error } = await supabase
-    //   .from('recommended_actions')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .order('priority', { ascending: true })
-    //
-    // if (error) {
-    //   console.error('Error fetching recommended actions:', error)
-    //   throw new Error('Failed to fetch recommended actions')
-    // }
-    //
-    // return data || []
+    const { data, error } = await supabase
+      .from('recommended_actions')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('due_date', { ascending: true, nullsFirst: true })
 
-    await delay(100)
-    return mockRecommendedActions.filter((action) => action.clientId === clientId)
+    if (error) {
+      return handleError(error, 'fetch recommended actions')
+    }
+    return data || []
   }
 
   // Complete client profile
   static async getClientProfile(clientId: string): Promise<ClientProfile | null> {
-    await delay(200)
-
-    const client = await this.getClientById(clientId)
-    if (!client) return null
-
     const [
+      client,
       professionalBackground,
       financialPreferences,
       communicationPreferences,
@@ -239,6 +292,7 @@ export class DataService {
       upcomingMeetings,
       recommendedActions,
     ] = await Promise.all([
+      this.getClientById(clientId),
       this.getProfessionalBackgroundByClientId(clientId),
       this.getFinancialPreferencesByClientId(clientId),
       this.getCommunicationPreferencesByClientId(clientId),
@@ -248,41 +302,58 @@ export class DataService {
       this.getRecommendedActionsByClientId(clientId),
     ])
 
+    if (!client) return null
+
     return {
       client,
-      professionalBackground: professionalBackground!,
-      financialPreferences: financialPreferences!,
-      communicationPreferences: communicationPreferences!,
-      conversations,
-      recentInteractions,
-      upcomingMeetings,
-      recommendedActions,
+      professionalBackground: professionalBackground || {
+        id: '',
+        clientId,
+        occupation: '',
+        education: '',
+        industry: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      financialPreferences: financialPreferences || {
+        id: '',
+        clientId,
+        investmentStyle: '',
+        esgPreference: '',
+        liquidityNeeds: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      communicationPreferences: communicationPreferences || {
+        id: '',
+        clientId,
+        preferredContact: '',
+        meetingFrequency: '',
+        reportDetailLevel: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      conversations: conversations || [],
+      recentInteractions: recentInteractions || [],
+      upcomingMeetings: upcomingMeetings || [],
+      recommendedActions: recommendedActions || [],
     }
   }
 
   // Search and filter operations
   static async searchConversations(clientId: string, query: string): Promise<Conversation[]> {
-    // const { data, error } = await supabase
-    //   .from('conversations')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .or(`title.ilike.%${query}%,summary.ilike.%${query}%`)
-    //   .order('date', { ascending: false })
-    //
-    // if (error) {
-    //   console.error('Error searching conversations:', error)
-    //   throw new Error('Failed to search conversations')
-    // }
-    //
-    // return data || []
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('client_id', clientId)
+      .or(`title.ilike.%${query}%,summary.ilike.%${query}%`)
+      .order('date', { ascending: false })
 
-    await delay(100)
-    const conversations = await this.getConversationsByClientId(clientId)
-    return conversations.filter(
-      (conv) =>
-        conv.title.toLowerCase().includes(query.toLowerCase()) ||
-        conv.summary?.toLowerCase().includes(query.toLowerCase()),
-    )
+    if (error) {
+      return handleError(error, 'search conversations')
+    }
+
+    return data || []
   }
 
   static async getConversationsByDateRange(
@@ -290,24 +361,19 @@ export class DataService {
     startDate: string,
     endDate: string,
   ): Promise<Conversation[]> {
-    // const { data, error } = await supabase
-    //   .from('conversations')
-    //   .select('*')
-    //   .eq('client_id', clientId)
-    //   .gte('date', startDate)
-    //   .lte('date', endDate)
-    //   .order('date', { ascending: false })
-    //
-    // if (error) {
-    //   console.error('Error fetching conversations by date range:', error)
-    //   throw new Error('Failed to fetch conversations by date range')
-    // }
-    //
-    // return data || []
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('client_id', clientId)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: false })
 
-    await delay(100)
-    const conversations = await this.getConversationsByClientId(clientId)
-    return conversations.filter((conv) => conv.date >= startDate && conv.date <= endDate)
+    if (error) {
+      return handleError(error, 'fetch conversations by date range')
+    }
+
+    return data || []
   }
 
   // ==========================================

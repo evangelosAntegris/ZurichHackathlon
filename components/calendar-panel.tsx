@@ -15,9 +15,13 @@ export function CalendarPanel() {
   useEffect(() => {
     const loadCalendarData = async () => {
       try {
+        const clients = await DataService.getAllClients()
+        if (!clients || clients.length === 0) throw new Error('No clients found')
+        const clientId = clients[0].id
+
         const [interactions, meetings] = await Promise.all([
-          DataService.getRecentInteractionsByClientId("client-1"),
-          DataService.getUpcomingMeetingsByClientId("client-1"),
+          DataService.getRecentInteractionsByClientId(clientId),
+          DataService.getUpcomingMeetingsByClientId(clientId),
         ])
 
         setRecentInteractions(interactions)
