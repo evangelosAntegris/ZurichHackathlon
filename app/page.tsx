@@ -117,19 +117,21 @@ export default function UBSDashboard() {
 
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Row: AIResponse above Client Insights */}
-            <div className="lg:col-span-2 space-y-6">
-              {(aiLoading || aiResponse) && (
+            {/* Top Row: AIResponse (full width) and then two-column layout: Client Insights (left) + Calendar (right) */}
+            {(aiLoading || aiResponse) && (
+              <div className="lg:col-span-2">
                 <AIResponse response={aiResponse} loading={aiLoading} />
-              )}
-              <ClientInsights selectedConversation={selectedConversation} />
-            </div>
+              </div>
+            )}
+            <ClientInsights selectedConversation={selectedConversation} />
+            <ActionsPanel clientId={selectedClientId} />
 
-            {/* Bottom Row */}
-            <CustomerInfo clientId={selectedClientId} />
-            <div className="grid grid-rows-2 gap-6">
+            {/* Bottom Row: two columns with equal height */}
+            <div className="h-full">
+              <CustomerInfo clientId={selectedClientId} />
+            </div>
+            <div className="h-full">
               <CalendarPanel />
-              <ActionsPanel clientId={selectedClientId} />
             </div>
           </div>
         </main>

@@ -36,15 +36,15 @@ export function ClientInsights({ selectedConversation }: ClientInsightsProps) {
   }, [selectedConversation])
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg">Client Insights</CardTitle>
+    <Card className="border border-slate-200 rounded-xl shadow-sm bg-white">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-semibold text-slate-900">Client Insights</CardTitle>
         <p className="text-sm text-slate-600">
-          AI-powered insights for Alice Smith based on financial data and market conditions
+          AI-powered insights for the customer based on financial data and market conditions
         </p>
       </CardHeader>
-      <CardContent>
-        <div className="mb-6">
+      <CardContent className="pt-0 space-y-4">
+        <div>
           <h3 className="font-semibold mb-2">AI Transcript Summary</h3>
           <p className="text-sm text-slate-600 mb-4">Select a conversation to view AI-generated summary</p>
         </div>
@@ -54,11 +54,11 @@ export function ClientInsights({ selectedConversation }: ClientInsightsProps) {
             <div className="text-slate-500">Loading conversation...</div>
           </div>
         ) : conversation ? (
-          <div className="bg-slate-50 p-4 rounded-lg">
+          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
             <div className="flex items-start gap-3">
               <MessageSquare className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
               <div>
-                <h4 className="font-medium mb-2">Conversation Summary</h4>
+                <h4 className="font-medium mb-2 text-slate-900">Conversation Summary</h4>
                 <p className="text-sm text-slate-700 leading-relaxed">
                   {conversation.summary || "Summary not available for this conversation."}
                 </p>

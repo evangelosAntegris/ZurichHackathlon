@@ -50,7 +50,7 @@ export function CustomerInfo({ clientId }: CustomerInfoProps) {
   if (loading) {
     return (
       <Card className="h-full">
-        <CardContent className="flex items-center justify-center h-full">
+        <CardContent className="flex items-center justify-center py-8">
           <div className="text-slate-500">Loading customer information...</div>
         </CardContent>
       </Card>
@@ -59,18 +59,18 @@ export function CustomerInfo({ clientId }: CustomerInfoProps) {
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-lg">Detailed Customer Info</CardTitle>
           <p className="text-sm text-slate-600">Comprehensive client profile</p>
         </div>
         <ExternalLink className="w-4 h-4 text-slate-400" />
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 pt-0">
         {professionalBackground && (
           <div>
-            <h4 className="font-semibold text-red-600 mb-3">Professional Background</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <h4 className="font-semibold text-red-600 mb-2">Professional Background</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-slate-600">Occupation:</span>
                 <p className="font-medium">{professionalBackground.occupation}</p>
@@ -89,8 +89,8 @@ export function CustomerInfo({ clientId }: CustomerInfoProps) {
 
         {financialPreferences && (
           <div>
-            <h4 className="font-semibold text-red-600 mb-3">Financial Preferences</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <h4 className="font-semibold text-red-600 mb-2">Financial Preferences</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-slate-600">Investment Style:</span>
                 <p className="font-medium">{financialPreferences.investmentStyle}</p>
@@ -109,8 +109,8 @@ export function CustomerInfo({ clientId }: CustomerInfoProps) {
 
         {communicationPreferences && (
           <div>
-            <h4 className="font-semibold text-red-600 mb-3">Communication Preferences</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <h4 className="font-semibold text-red-600 mb-2">Communication Preferences</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-slate-600">Preferred Contact:</span>
                 <p className="font-medium">{communicationPreferences.preferredContact}</p>
@@ -127,7 +127,7 @@ export function CustomerInfo({ clientId }: CustomerInfoProps) {
           </div>
         )}
 
-        <div className="pt-4 border-t">
+        <div className="pt-3 border-t">
           <Button variant="outline" className="w-full bg-transparent">
             View Full Profile
           </Button>
