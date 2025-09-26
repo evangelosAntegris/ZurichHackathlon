@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { UBSHeader } from "@/components/ubs-header"
 import { ClientSidebar } from "@/components/client-sidebar"
 import { ClientInsights } from "@/components/client-insights"
+import { AIResponse } from "@/components/ai-response"
 import { CustomerInfo } from "@/components/customer-info"
 import { CalendarPanel } from "@/components/calendar-panel"
 import { ActionsPanel } from "@/components/actions-panel"
@@ -16,6 +17,8 @@ export default function UBSDashboard() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [aiResponse, setAiResponse] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
 
   useEffect(() => {
     const loadClientProfile = async () => {
@@ -40,6 +43,8 @@ export default function UBSDashboard() {
     try {
       // Log the query being sent
       console.log("[DialogueIQ] Sending query:", query)
+      setAiLoading(true)
+      setAiResponse(null)
 
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -54,7 +59,8 @@ export default function UBSDashboard() {
       }
 
       const data = await res.json()
-      console.log("[DialogueIQ] Response:", data.response)
+      // Put the model response into the AIResponse panel
+      setAiResponse(data.response)
       // Optionally also keep a local log of the interaction in state
       const newMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -66,6 +72,10 @@ export default function UBSDashboard() {
       setChatMessages((prev) => [...prev, newMessage])
     } catch (err) {
       console.error("[DialogueIQ] Failed to send query:", err)
+      setAiResponse("Sorry, I couldn't complete that request. Please try again.")
+    }
+    finally {
+      setAiLoading(false)
     }
   }
 
@@ -82,8 +92,11 @@ export default function UBSDashboard() {
 
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-            {/* Top Row */}
-            <div className="lg:col-span-2">
+            {/* Top Row: AIResponse above Client Insights */}
+            <div className="lg:col-span-2 space-y-6">
+              {(aiLoading || aiResponse) && (
+                <AIResponse response={aiResponse} loading={aiLoading} />
+              )}
               <ClientInsights selectedConversation={selectedConversation} />
             </div>
 
