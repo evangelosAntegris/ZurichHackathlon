@@ -23,7 +23,7 @@ import fs from "fs/promises";
 import path from "path";
 
 // ⚠️ UPDATE THIS IMPORT PATH if your orchestrator `run(...)` lives elsewhere.
-import { run } from "./orchestrator";
+import { orchestratorRun } from "./orchestrator";
 
 // Allowed UBS labels (exact ids & order must match the official evaluator)
 const ALLOWED_LABELS = [
@@ -209,7 +209,7 @@ function singleSampleBreakdown(yTrue: string[], yPred: string[]) {
   const gtText = await readIf(fileJson);
 
   // Run full pipeline (Agents 1→5)
-  const { prep, ie, clf, val, fin } = await run(txt, promptPath);
+  const { prep, ie, clf, val, fin } = await orchestratorRun(txt, promptPath);
 
   // Prepare predictions & ground-truth
   const yPred = fin.labels_final;

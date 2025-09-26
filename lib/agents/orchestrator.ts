@@ -14,7 +14,7 @@ type OrchestratorResult = {
 };
 
 /** Runs the full pipeline: preprocessing -> ie -> classifier -> validation -> finalize */
-export const run = async (raw: string, classifierPromptPath?: string): Promise<OrchestratorResult> => {
+export const orchestratorRun = async (raw: string, classifierPromptPath?: string): Promise<OrchestratorResult> => {
   const promptPath = classifierPromptPath || process.env.CLASSIFIER_PROMPT_PATH || "prompts/classifier.txt";
 
   const prep = await preprocessingAgent({ transcript_raw: raw });
@@ -37,4 +37,4 @@ export const run = async (raw: string, classifierPromptPath?: string): Promise<O
   return { prep, ie, clf, val, fin };
 };
 
-export default run;
+export default orchestratorRun;

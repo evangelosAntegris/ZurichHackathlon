@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useEffect, useState, useRef } from "react"
 import { DataService } from "@/lib/data-service"
 import type { Client, Conversation } from "@/lib/types"
+import { runLLMPipeline } from "@/lib/llm-pipeline-service"
 
 interface ClientSidebarProps {
   selectedConversation: string | null
@@ -145,7 +146,10 @@ export function ClientSidebar({ selectedConversation, onConversationSelect }: Cl
                     ? "bg-slate-700 border-slate-500"
                     : "bg-slate-800 hover:bg-slate-700"
                 }`}
-                onClick={() => onConversationSelect(conversation.id)}
+                onClick={() => {
+  onConversationSelect(conversation.id);
+  runLLMPipeline(conversation.id); // or without params if not needed
+}}
               >
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0" />

@@ -67,7 +67,7 @@ export async function classifierAgent(input: ClassifierInput): Promise<Classifie
   const { transcript_clean, requests, promptPath } = input;
 
   // 1) Load and wrap your TXT prompt
-  const rawTxt = await loadTxtPrompt(promptPath);
+  const rawTxt = "Test" //await loadTxtPrompt();
   const prompt = wrapClassifierTxt(rawTxt, transcript_clean, requests);
 
   // 2) Call LLM (JSON enforced by llmCall’s system + our wrapper)
