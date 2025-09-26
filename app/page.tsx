@@ -36,15 +36,37 @@ export default function UBSDashboard() {
     loadClientProfile()
   }, [])
 
-  const handleChatQuery = (query: string) => {
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: query,
-      timestamp: new Date(),
-      clientId: clientProfile?.client.id,
+  const handleChatQuery = async (query: string) => {
+    try {
+      // Log the query being sent
+      console.log("[DialogueIQ] Sending query:", query)
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, clientContext: clientProfile?.client }),
+      })
+
+      if (!res.ok) {
+        const txt = await res.text()
+        console.error("[DialogueIQ] API error:", txt)
+        return
+      }
+
+      const data = await res.json()
+      console.log("[DialogueIQ] Response:", data.response)
+      // Optionally also keep a local log of the interaction in state
+      const newMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: "user",
+        content: query,
+        timestamp: new Date(),
+        clientId: clientProfile?.client.id,
+      }
+      setChatMessages((prev) => [...prev, newMessage])
+    } catch (err) {
+      console.error("[DialogueIQ] Failed to send query:", err)
     }
-    setChatMessages((prev) => [...prev, newMessage])
   }
 
   const handleNewChatMessage = (message: ChatMessage) => {
