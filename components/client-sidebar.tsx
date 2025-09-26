@@ -20,6 +20,12 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
   const [client, setClient] = useState<Client | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
+  const [pipelineState, setPipelineState] = useState<{
+    conversationId: string | null
+    loading: boolean
+    error: string | null
+    result: any | null
+  }>({ conversationId: null, loading: false, error: null, result: null })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -75,6 +81,26 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
   const triggerFileUpload = () => {
     fileInputRef.current?.click()
   }
+
+  const handleRunPipeline = async (conversationId: string) => {
+    setPipelineState({ conversationId, loading: true, error: null, result: null })
+
+    try {
+      const data = await runLLMPipeline(conversationId)
+      setPipelineState({ conversationId, loading: false, error: null, result: data?.result ?? null })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Errore sconosciuto"
+      setPipelineState({ conversationId, loading: false, error: message, result: null })
+    }
+  }
+
+  useEffect(() => {
+    setPipelineState((prev) =>
+      prev.conversationId === selectedConversation
+        ? prev
+        : { conversationId: null, loading: false, error: null, result: null },
+    )
+  }, [selectedConversation])
 
   if (loading || !client) {
     return (
@@ -174,9 +200,8 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
                     : "bg-slate-800 hover:bg-slate-700"
                 }`}
                 onClick={() => {
-  onConversationSelect(conversation.id);
-  runLLMPipeline(conversation.id); // or without params if not needed
-}}
+                  onConversationSelect(conversation.id)
+                }}
               >
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0" />
@@ -191,6 +216,39 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
                     </div>
                   </div>
                 </div>
+                {selectedConversation === conversation.id && (
+                  <div className="mt-3 space-y-2">
+                    <Button
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (!(pipelineState.loading && pipelineState.conversationId === conversation.id)) {
+                          handleRunPipeline(conversation.id)
+                        }
+                      }}
+                      disabled={
+                        pipelineState.loading && pipelineState.conversationId === conversation.id
+                      }
+                      className="w-full bg-blue-500 hover:bg-blue-400 text-white"
+                    >
+                      {pipelineState.loading && pipelineState.conversationId === conversation.id
+                        ? "Avvio pipeline..."
+                        : "Esegui Orchestrator"}
+                    </Button>
+                    {pipelineState.error && pipelineState.conversationId === conversation.id && (
+                      <p className="text-xs text-red-300">{pipelineState.error}</p>
+                    )}
+                    {pipelineState.result && pipelineState.conversationId === conversation.id && (
+                      <div className="text-xs text-slate-200 bg-slate-900/60 border border-slate-700 rounded p-2">
+                        <p className="font-semibold mb-1">Labels finali</p>
+                        <p className="text-slate-300">
+                          {Array.isArray(pipelineState.result?.fin?.labels_final)
+                            ? pipelineState.result.fin.labels_final.join(", ") || "Nessuna etichetta"
+                            : "Nessun dato disponibile"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </Card>
             ))}
           </div>
