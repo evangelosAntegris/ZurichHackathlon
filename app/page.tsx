@@ -14,30 +14,47 @@ import type { ChatMessage } from "@/lib/ai-service"
 import type { ClientProfile } from "@/lib/types"
 
 export default function UBSDashboard() {
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [aiResponse, setAiResponse] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
 
+  // On first load, select the first client
   useEffect(() => {
-    const loadClientProfile = async () => {
+    const init = async () => {
       try {
-        // Fetch first available client and load profile
         const clients = await DataService.getAllClients()
         if (clients && clients.length > 0) {
-          const profile = await DataService.getClientProfile(clients[0].id)
-          setClientProfile(profile)
+          setSelectedClientId(clients[0].id)
         } else {
-          setClientProfile(null)
+          setSelectedClientId(null)
         }
       } catch (error) {
-        console.error("Failed to load client profile:", error)
+        console.error("Failed to load clients:", error)
       }
     }
-
-    loadClientProfile()
+    init()
   }, [])
+
+  // Load client profile when selected client changes
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!selectedClientId) {
+        setClientProfile(null)
+        return
+      }
+      try {
+        const profile = await DataService.getClientProfile(selectedClientId)
+        setClientProfile(profile)
+      } catch (error) {
+        console.error("Failed to load client profile:", error)
+        setClientProfile(null)
+      }
+    }
+    loadProfile()
+  }, [selectedClientId])
 
   const handleChatQuery = async (query: string) => {
     try {
@@ -88,7 +105,15 @@ export default function UBSDashboard() {
       <UBSHeader onChatQuery={handleChatQuery} />
 
       <div className="flex flex-1 overflow-hidden">
-        <ClientSidebar selectedConversation={selectedConversation} onConversationSelect={setSelectedConversation} />
+        <ClientSidebar
+          selectedClientId={selectedClientId}
+          onClientChange={(id) => {
+            setSelectedClientId(id)
+            setSelectedConversation(null)
+          }}
+          selectedConversation={selectedConversation}
+          onConversationSelect={setSelectedConversation}
+        />
 
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -101,10 +126,10 @@ export default function UBSDashboard() {
             </div>
 
             {/* Bottom Row */}
-            <CustomerInfo />
+            <CustomerInfo clientId={selectedClientId} />
             <div className="grid grid-rows-2 gap-6">
               <CalendarPanel />
-              <ActionsPanel />
+              <ActionsPanel clientId={selectedClientId} />
             </div>
           </div>
         </main>

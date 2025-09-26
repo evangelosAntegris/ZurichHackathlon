@@ -35,16 +35,23 @@ const getPriorityNumber = (priority: string) => {
   }
 }
 
-export function ActionsPanel() {
+interface ActionsPanelProps {
+  clientId: string | null
+}
+
+export function ActionsPanel({ clientId }: ActionsPanelProps) {
   const [recommendedActions, setRecommendedActions] = useState<RecommendedAction[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadActions = async () => {
+      if (!clientId) {
+        setRecommendedActions([])
+        setLoading(false)
+        return
+      }
+      setLoading(true)
       try {
-        const clients = await DataService.getAllClients()
-        if (!clients || clients.length === 0) throw new Error('No clients found')
-        const clientId = clients[0].id
         const actions = await DataService.getRecommendedActionsByClientId(clientId)
         setRecommendedActions(actions)
       } catch (error) {
@@ -55,7 +62,7 @@ export function ActionsPanel() {
     }
 
     loadActions()
-  }, [])
+  }, [clientId])
 
   if (loading) {
     return (

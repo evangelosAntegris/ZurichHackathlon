@@ -7,7 +7,11 @@ import { useEffect, useState } from "react"
 import { DataService } from "@/lib/data-service"
 import type { ProfessionalBackground, FinancialPreferences, CommunicationPreferences } from "@/lib/types"
 
-export function CustomerInfo() {
+interface CustomerInfoProps {
+  clientId: string | null
+}
+
+export function CustomerInfo({ clientId }: CustomerInfoProps) {
   const [professionalBackground, setProfessionalBackground] = useState<ProfessionalBackground | null>(null)
   const [financialPreferences, setFinancialPreferences] = useState<FinancialPreferences | null>(null)
   const [communicationPreferences, setCommunicationPreferences] = useState<CommunicationPreferences | null>(null)
@@ -15,11 +19,15 @@ export function CustomerInfo() {
 
   useEffect(() => {
     const loadCustomerInfo = async () => {
+      if (!clientId) {
+        setProfessionalBackground(null)
+        setFinancialPreferences(null)
+        setCommunicationPreferences(null)
+        setLoading(false)
+        return
+      }
+      setLoading(true)
       try {
-        const clients = await DataService.getAllClients()
-        if (!clients || clients.length === 0) throw new Error('No clients found')
-        const clientId = clients[0].id
-
         const [profBg, finPref, commPref] = await Promise.all([
           DataService.getProfessionalBackgroundByClientId(clientId),
           DataService.getFinancialPreferencesByClientId(clientId),
@@ -37,7 +45,7 @@ export function CustomerInfo() {
     }
 
     loadCustomerInfo()
-  }, [])
+  }, [clientId])
 
   if (loading) {
     return (

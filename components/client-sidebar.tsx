@@ -1,5 +1,5 @@
 "use client"
-import { ChevronDown, Clock, Upload } from "lucide-react"
+import { Clock, Upload, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -8,25 +8,43 @@ import { DataService } from "@/lib/data-service"
 import type { Client, Conversation } from "@/lib/types"
 
 interface ClientSidebarProps {
+  selectedClientId: string | null
+  onClientChange: (clientId: string) => void
   selectedConversation: string | null
   onConversationSelect: (conversationId: string) => void
 }
 
-export function ClientSidebar({ selectedConversation, onConversationSelect }: ClientSidebarProps) {
+export function ClientSidebar({ selectedClientId, onClientChange, selectedConversation, onConversationSelect }: ClientSidebarProps) {
+  const [clients, setClients] = useState<Client[]>([])
   const [client, setClient] = useState<Client | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const loadClientData = async () => {
+    const init = async () => {
       try {
-        const clients = await DataService.getAllClients()
-        if (!clients || clients.length === 0) throw new Error('No clients found')
-        const clientId = clients[0].id
-        const clientData = await DataService.getClientById(clientId)
-        const conversationData = await DataService.getConversationsByClientId(clientId)
+        const all = await DataService.getAllClients()
+        setClients(all)
+      } catch (e) {
+        console.error('Failed to load clients list:', e)
+      }
+    }
+    init()
+  }, [])
 
+  useEffect(() => {
+    const loadClientData = async () => {
+      if (!selectedClientId) {
+        setClient(null)
+        setConversations([])
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      try {
+        const clientData = await DataService.getClientById(selectedClientId)
+        const conversationData = await DataService.getConversationsByClientId(selectedClientId)
         setClient(clientData)
         setConversations(conversationData)
       } catch (error) {
@@ -35,9 +53,8 @@ export function ClientSidebar({ selectedConversation, onConversationSelect }: Cl
         setLoading(false)
       }
     }
-
     loadClientData()
-  }, [])
+  }, [selectedClientId])
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return
@@ -78,12 +95,22 @@ export function ClientSidebar({ selectedConversation, onConversationSelect }: Cl
 
   return (
     <div className="w-80 bg-[#1e293b] text-white flex flex-col h-full">
-      {/* Client Dropdown */}
+      {/* Client Selector */}
       <div className="p-4 border-b border-slate-700">
-        <Button variant="ghost" className="w-full justify-between text-white hover:bg-slate-700 p-2">
-          <span className="text-sm">Clients</span>
-          <ChevronDown className="w-4 h-4" />
-        </Button>
+        <label className="block text-xs text-slate-300 mb-2">Select Client</label>
+        <div className="relative group">
+          <select
+            className="w-full appearance-none bg-slate-800/80 border border-slate-600/80 text-white text-sm rounded-md pl-3 pr-9 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors hover:bg-slate-800"
+            value={selectedClientId || ''}
+            onChange={(e) => onClientChange(e.target.value)}
+          >
+            <option value="" disabled>Select a client...</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-white" />
+        </div>
       </div>
 
       {/* Client Profile */}
