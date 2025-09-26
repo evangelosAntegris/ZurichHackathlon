@@ -26,7 +26,7 @@ export function UBSHeader({ onChatQuery }: UBSHeaderProps) {
   return (
     <header className="bg-[#1e293b] text-white px-6 py-3 flex items-center justify-between border-b border-slate-700">
       <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
             <Settings className="w-5 h-5 text-[#1e293b]" />
           </div>
