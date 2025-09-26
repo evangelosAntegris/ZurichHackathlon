@@ -36,7 +36,7 @@ export function ClientInsights({ selectedConversation }: ClientInsightsProps) {
   }, [selectedConversation])
 
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader className="pb-4">
         <CardTitle className="text-lg">Client Insights</CardTitle>
         <p className="text-sm text-slate-600">

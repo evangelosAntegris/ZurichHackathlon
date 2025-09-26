@@ -116,7 +116,7 @@ export default function UBSDashboard() {
         />
 
         <main className="flex-1 p-6 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top Row: AIResponse above Client Insights */}
             <div className="lg:col-span-2 space-y-6">
               {(aiLoading || aiResponse) && (
