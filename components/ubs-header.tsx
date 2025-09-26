@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { Search, Bell, User, Settings } from "lucide-react"
+import Image from "next/image"
+import { Search, Bell, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -26,10 +27,15 @@ export function UBSHeader({ onChatQuery }: UBSHeaderProps) {
   return (
     <header className="bg-[#1e293b] text-white px-6 py-3 flex items-center justify-between border-b border-slate-700">
       <div className="flex items-center gap-6">
-        <div className="flex items-center gap-1">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <Settings className="w-5 h-5 text-[#1e293b]" />
-          </div>
+        <div className="flex items-center gap-2">
+          <Image
+            src="/ubs_logo.png"
+            alt="UBS Logo"
+            width={60}
+            height={60}
+            className="w-10 h-10 rounded-lg"
+            priority
+          />
           <h1 className="text-xl font-semibold">UBS DialogueIQ</h1>
         </div>
       </div>

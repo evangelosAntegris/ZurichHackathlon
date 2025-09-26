@@ -35,16 +35,23 @@ const getPriorityNumber = (priority: string) => {
   }
 }
 
-export function ActionsPanel() {
+interface ActionsPanelProps {
+  clientId: string | null
+}
+
+export function ActionsPanel({ clientId }: ActionsPanelProps) {
   const [recommendedActions, setRecommendedActions] = useState<RecommendedAction[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadActions = async () => {
+      if (!clientId) {
+        setRecommendedActions([])
+        setLoading(false)
+        return
+      }
+      setLoading(true)
       try {
-        const clients = await DataService.getAllClients()
-        if (!clients || clients.length === 0) throw new Error('No clients found')
-        const clientId = clients[0].id
         const actions = await DataService.getRecommendedActionsByClientId(clientId)
         setRecommendedActions(actions)
       } catch (error) {
@@ -55,34 +62,34 @@ export function ActionsPanel() {
     }
 
     loadActions()
-  }, [])
+  }, [clientId])
 
   if (loading) {
     return (
-      <Card className="h-full">
+      <Card className="h-full bg-gradient-to-b from-red-50 to-amber-50 border-red-100">
         <CardContent className="flex items-center justify-center h-full">
-          <div className="text-slate-500">Loading actions...</div>
+          <div className="text-slate-600">Loading actions...</div>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full bg-gradient-to-b from-red-50 to-amber-50 border-red-100">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <div>
-          <CardTitle className="text-lg">AI-recommended Actions</CardTitle>
-          <p className="text-sm text-slate-600">Prioritized next steps</p>
+          <CardTitle className="text-lg text-red-700">AI-recommended Actions</CardTitle>
+          <p className="text-sm text-slate-700">Prioritized next steps</p>
         </div>
       </CardHeader>
       <CardContent>
         <div className="mb-4">
-          <h4 className="font-semibold mb-3">Top Recommended Actions</h4>
+          <h4 className="font-semibold mb-3 text-red-700">Top Recommended Actions</h4>
         </div>
 
         <div className="space-y-3 mb-6">
           {recommendedActions.map((action) => (
-            <div key={action.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+            <div key={action.id} className="flex items-start gap-3 p-3 bg-white/70 border border-red-100 rounded-lg backdrop-blur-[1px]">
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
                   action.priority === "high"
@@ -95,17 +102,17 @@ export function ActionsPanel() {
                 {getPriorityNumber(action.priority)}
               </div>
               <div className="flex-1">
-                <h5 className="font-medium text-sm">{action.title}</h5>
-                <p className="text-xs text-slate-600 mt-1">{action.description}</p>
+                <h5 className="font-medium text-sm text-slate-900">{action.title}</h5>
+                <p className="text-xs text-slate-700 mt-1">{action.description}</p>
                 {action.dueDate && (
-                  <p className="text-xs text-slate-500 mt-1">Due: {new Date(action.dueDate).toLocaleDateString()}</p>
+                  <p className="text-xs text-slate-600 mt-1">Due: {new Date(action.dueDate).toLocaleDateString()}</p>
                 )}
               </div>
             </div>
           ))}
         </div>
 
-        <Button className="w-full bg-red-600 hover:bg-red-700 text-white">View All Recommended Actions</Button>
+        <Button className="w-full bg-red-600 hover:bg-red-700 text-white border border-red-700/30">View All Recommended Actions</Button>
       </CardContent>
     </Card>
   )
