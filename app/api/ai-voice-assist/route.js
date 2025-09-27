@@ -18,7 +18,7 @@ export async function POST(req) {
 
     const prompt = `You are a Swiss banking assistant. Read the transcript and assign multi-label tasks strictly from ["plan_contact","schedule_meeting","update_contact_info_non_postal","update_contact_info_postal_address","update_kyc_activity","update_kyc_origin_of_assets","update_kyc_purpose_of_businessrelation","update_kyc_total_assets"].
 
-Conversation: "${transcript}"${}
+Conversation: "${transcript}"
 
 Guidelines:
 - Use a label only when the transcript contains actionable evidence to log in the bank system.
