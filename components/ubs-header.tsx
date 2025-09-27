@@ -38,14 +38,6 @@ export function UBSHeader({ onChatQuery }: UBSHeaderProps) {
           />
           <h1 className="text-xl font-semibold">UBS DialogueIQ</h1>
         </div>
-        <Button
-          onClick={() => console.log("Start Voice Transcript clicked")}
-          className="bg-red-600 hover:bg-red-700 text-white border border-red-700/30"
-          size="sm"
-        >
-          <Phone className="w-4 h-4 mr-2" />
-          Start Voice Transcript
-        </Button>
       </div>
 
       <div className="flex-1 max-w-2xl mx-8">
@@ -61,6 +53,14 @@ export function UBSHeader({ onChatQuery }: UBSHeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
+        <Button
+          onClick={() => console.log("Start Voice Transcript clicked")}
+          className="bg-red-600 hover:bg-red-700 text-white border border-red-700/30"
+          size="sm"
+        >
+          <Phone className="w-4 h-4 mr-2" />
+          Start Voice Transcript
+        </Button>
         <Button variant="ghost" size="sm" className="relative text-white hover:bg-slate-700">
           <Bell className="w-5 h-5" />
           <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center p-0">

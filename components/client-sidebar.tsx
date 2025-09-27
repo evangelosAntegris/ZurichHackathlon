@@ -107,6 +107,16 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
     )
   }, [selectedConversation])
 
+  // Auto-trigger pipeline when a conversation is selected and not already labelled
+  useEffect(() => {
+    if (!selectedConversation) return
+    const alreadyLabeled = labeledMap[selectedConversation]
+    const isLoading = pipelineState.loading && pipelineState.conversationId === selectedConversation
+    if (!alreadyLabeled && !isLoading) {
+      handleRunPipeline(selectedConversation)
+    }
+  }, [selectedConversation, labeledMap, pipelineState])
+
   if (loading || !client) {
     return (
       <div className="w-80 bg-[#1e293b] text-white flex flex-col h-full">
@@ -221,37 +231,7 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
                     </div>
                   </div>
                 </div>
-                {selectedConversation === conversation.id && (
-                  <div className="mt-3 space-y-2">
-                    <Button
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        const alreadyLabeled = labeledMap[conversation.id]
-                        if (!alreadyLabeled && !(pipelineState.loading && pipelineState.conversationId === conversation.id)) {
-                          handleRunPipeline(conversation.id)
-                        }
-                      }}
-                      disabled={
-                        labeledMap[conversation.id] || (pipelineState.loading && pipelineState.conversationId === conversation.id)
-                      }
-                      className={
-                        `w-full text-white ` +
-                        (labeledMap[conversation.id]
-                          ? "bg-slate-500 cursor-not-allowed"
-                          : "bg-blue-500 hover:bg-blue-400")
-                      }
-                    >
-                      {labeledMap[conversation.id]
-                        ? "Labelling done"
-                        : pipelineState.loading && pipelineState.conversationId === conversation.id
-                          ? "Thinking..."
-                          : "Start AI Labelling"}
-                    </Button>
-                    {pipelineState.error && pipelineState.conversationId === conversation.id && (
-                      <p className="text-xs text-red-300">{pipelineState.error}</p>
-                    )}
-                  </div>
-                )}
+                {/* Auto-labelling triggered on selection; no manual button shown */}
               </Card>
             ))}
           </div>

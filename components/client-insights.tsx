@@ -1,6 +1,6 @@
 "use client"
 
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, Sparkles } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect, useState } from "react"
 import { DataService } from "@/lib/data-service"
@@ -68,21 +68,43 @@ export function ClientInsights({ selectedConversation, labels }: ClientInsightsP
               </div>
             </div>
 
-            {labels && labels.length > 0 && (
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <h4 className="font-medium mb-2 text-slate-900">Final Labels</h4>
-                <div className="flex flex-wrap gap-2">
+            <div className="p-5 rounded-xl border border-indigo-100 shadow-sm bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
+              <div className="flex items-center gap-2 mb-3">
+                <h4 className="font-semibold text-slate-900">Final Labels</h4>
+                <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-white/70 border border-indigo-100 text-indigo-700">
+                  AI-generated
+                </span>
+              </div>
+              {labels && labels.length > 0 ? (
+                <div className="flex flex-wrap gap-2.5">
                   {labels.map((label) => (
                     <span
                       key={label}
-                      className="px-2 py-1 text-xs rounded-md bg-white border border-slate-200 text-slate-700"
+                      className="px-3 py-1.5 text-sm rounded-md bg-white/80 border border-indigo-100 text-slate-800 shadow-xs"
                     >
                       {label}
                     </span>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Sparkles className="w-4 h-4 text-indigo-600 animate-spin" style={{ animationDuration: '1.5s' }} />
+                    <span className="bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent font-medium">
+                      Thinking...
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2.5">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <span
+                        key={idx}
+                        className="px-6 h-6 inline-block rounded-md bg-white/70 border border-indigo-100 animate-pulse"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">
