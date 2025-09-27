@@ -20,6 +20,7 @@ export default function UBSDashboard() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [aiResponse, setAiResponse] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
+  const [pipelineLabelsByConversation, setPipelineLabelsByConversation] = useState<Record<string, string[]>>({})
 
   // On first load, select the first client
   useEffect(() => {
@@ -113,17 +114,23 @@ export default function UBSDashboard() {
           }}
           selectedConversation={selectedConversation}
           onConversationSelect={setSelectedConversation}
+          onPipelineResult={(conversationId, labels) => {
+            setPipelineLabelsByConversation((prev) => ({ ...prev, [conversationId]: labels }))
+          }}
         />
 
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Row: AIResponse (full width) and then two-column layout: Client Insights (left) + Calendar (right) */}
+            {/* Top Row: AIResponse (full width) and then two-column layout: Client Insights (left) + Actions (right) */}
             {(aiLoading || aiResponse) && (
               <div className="lg:col-span-2">
                 <AIResponse response={aiResponse} loading={aiLoading} />
               </div>
             )}
-            <ClientInsights selectedConversation={selectedConversation} />
+            <ClientInsights
+              selectedConversation={selectedConversation}
+              labels={selectedConversation ? pipelineLabelsByConversation[selectedConversation] : undefined}
+            />
             <ActionsPanel clientId={selectedClientId} />
 
             {/* Bottom Row: two columns with equal height */}

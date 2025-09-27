@@ -13,13 +13,15 @@ interface ClientSidebarProps {
   onClientChange: (clientId: string) => void
   selectedConversation: string | null
   onConversationSelect: (conversationId: string) => void
+  onPipelineResult?: (conversationId: string, labels: string[]) => void
 }
 
-export function ClientSidebar({ selectedClientId, onClientChange, selectedConversation, onConversationSelect }: ClientSidebarProps) {
+export function ClientSidebar({ selectedClientId, onClientChange, selectedConversation, onConversationSelect, onPipelineResult }: ClientSidebarProps) {
   const [clients, setClients] = useState<Client[]>([])
   const [client, setClient] = useState<Client | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
+  const [labeledMap, setLabeledMap] = useState<Record<string, boolean>>({})
   const [pipelineState, setPipelineState] = useState<{
     conversationId: string | null
     loading: boolean
@@ -88,6 +90,9 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
     try {
       const data = await runLLMPipeline(conversationId)
       setPipelineState({ conversationId, loading: false, error: null, result: data?.result ?? null })
+      const labels = Array.isArray(data?.result?.fin?.labels_final) ? data.result.fin.labels_final as string[] : []
+      onPipelineResult?.(conversationId, labels)
+      setLabeledMap((prev) => ({ ...prev, [conversationId]: true }))
     } catch (error) {
       const message = error instanceof Error ? error.message : "Errore sconosciuto"
       setPipelineState({ conversationId, loading: false, error: message, result: null })
@@ -221,31 +226,29 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
                     <Button
                       onClick={(event) => {
                         event.stopPropagation()
-                        if (!(pipelineState.loading && pipelineState.conversationId === conversation.id)) {
+                        const alreadyLabeled = labeledMap[conversation.id]
+                        if (!alreadyLabeled && !(pipelineState.loading && pipelineState.conversationId === conversation.id)) {
                           handleRunPipeline(conversation.id)
                         }
                       }}
                       disabled={
-                        pipelineState.loading && pipelineState.conversationId === conversation.id
+                        labeledMap[conversation.id] || (pipelineState.loading && pipelineState.conversationId === conversation.id)
                       }
-                      className="w-full bg-blue-500 hover:bg-blue-400 text-white"
+                      className={
+                        `w-full text-white ` +
+                        (labeledMap[conversation.id]
+                          ? "bg-slate-500 cursor-not-allowed"
+                          : "bg-blue-500 hover:bg-blue-400")
+                      }
                     >
-                      {pipelineState.loading && pipelineState.conversationId === conversation.id
-                        ? "Avvio pipeline..."
-                        : "Esegui Orchestrator"}
+                      {labeledMap[conversation.id]
+                        ? "Labelling done"
+                        : pipelineState.loading && pipelineState.conversationId === conversation.id
+                          ? "Thinking..."
+                          : "Start AI Labelling"}
                     </Button>
                     {pipelineState.error && pipelineState.conversationId === conversation.id && (
                       <p className="text-xs text-red-300">{pipelineState.error}</p>
-                    )}
-                    {pipelineState.result && pipelineState.conversationId === conversation.id && (
-                      <div className="text-xs text-slate-200 bg-slate-900/60 border border-slate-700 rounded p-2">
-                        <p className="font-semibold mb-1">Labels finali</p>
-                        <p className="text-slate-300">
-                          {Array.isArray(pipelineState.result?.fin?.labels_final)
-                            ? pipelineState.result.fin.labels_final.join(", ") || "Nessuna etichetta"
-                            : "Nessun dato disponibile"}
-                        </p>
-                      </div>
                     )}
                   </div>
                 )}

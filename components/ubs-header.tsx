@@ -3,7 +3,7 @@
 import type React from "react"
 
 import Image from "next/image"
-import { Search, Bell, User } from "lucide-react"
+import { Search, Bell, User, Phone } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -38,6 +38,14 @@ export function UBSHeader({ onChatQuery }: UBSHeaderProps) {
           />
           <h1 className="text-xl font-semibold">UBS DialogueIQ</h1>
         </div>
+        <Button
+          onClick={() => console.log("Start Voice Transcript clicked")}
+          className="bg-red-600 hover:bg-red-700 text-white border border-red-700/30"
+          size="sm"
+        >
+          <Phone className="w-4 h-4 mr-2" />
+          Start Voice Transcript
+        </Button>
       </div>
 
       <div className="flex-1 max-w-2xl mx-8">

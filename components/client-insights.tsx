@@ -8,9 +8,10 @@ import type { Conversation } from "@/lib/types"
 
 interface ClientInsightsProps {
   selectedConversation: string | null
+  labels?: string[]
 }
 
-export function ClientInsights({ selectedConversation }: ClientInsightsProps) {
+export function ClientInsights({ selectedConversation, labels }: ClientInsightsProps) {
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -54,17 +55,35 @@ export function ClientInsights({ selectedConversation }: ClientInsightsProps) {
             <div className="text-slate-500">Loading conversation...</div>
           </div>
         ) : conversation ? (
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div className="flex items-start gap-3">
-              <MessageSquare className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <h4 className="font-medium mb-2 text-slate-900">Conversation Summary</h4>
-                <p className="text-sm text-slate-700 leading-relaxed">
-                  {conversation.summary || "Summary not available for this conversation."}
-                </p>
+          <>
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="flex items-start gap-3">
+                <MessageSquare className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium mb-2 text-slate-900">Conversation Summary</h4>
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    {conversation.summary || "Summary not available for this conversation."}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+
+            {labels && labels.length > 0 && (
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <h4 className="font-medium mb-2 text-slate-900">Final Labels</h4>
+                <div className="flex flex-wrap gap-2">
+                  {labels.map((label) => (
+                    <span
+                      key={label}
+                      className="px-2 py-1 text-xs rounded-md bg-white border border-slate-200 text-slate-700"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <MessageSquare className="w-16 h-16 text-slate-300 mb-4" />
