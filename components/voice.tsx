@@ -1,149 +1,173 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { X, Mic, MicOff, User, Building2, Settings, Trash2 } from "lucide-react"
 
-export default function Home() {
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const [currentSpeaker, setCurrentSpeaker] = useState('advisor');
-  const [selectedLanguage, setSelectedLanguage] = useState('en-US');
-  const [suggestions, setSuggestions] = useState([]);
-  const [alerts, setAlerts] = useState([]);
-  const [labelsItems, setLabelsItems] = useState([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const recognitionRef = useRef(null);
+interface VoiceTranscriptPopupProps {
+  isOpen: boolean
+  onClose: () => void
+}
 
-  // Languages for UBS 
+export function VoiceTranscriptPopup({ isOpen, onClose }: VoiceTranscriptPopupProps) {
+  const [isRecording, setIsRecording] = useState(false)
+  const [clientTranscript, setClientTranscript] = useState("")
+  const [agentTranscript, setAgentTranscript] = useState("")
+  const [currentSpeaker, setCurrentSpeaker] = useState<"client" | "agent">("client")
+  const [selectedLanguage, setSelectedLanguage] = useState("en-US")
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [alerts, setAlerts] = useState<string[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const recognitionRef = useRef<any>(null)
+
+  // Languages for UBS
   const languages = [
-    { code: 'en-US', name: 'English' },
-    { code: 'de-DE', name: 'Deutsch' },
-    { code: 'fr-FR', name: 'Français' },
-    { code: 'it-IT', name: 'Italiano' },
-  ];
+    { code: "en-US", name: "English" },
+    { code: "de-DE", name: "Deutsch" },
+    { code: "fr-FR", name: "Français" },
+    { code: "it-IT", name: "Italiano" },
+  ]
 
   // Setup speech recognition
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      
+    if (typeof window !== "undefined" && isOpen) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+
       if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        recognition.lang = selectedLanguage;
+        const recognition = new SpeechRecognition()
+        recognition.continuous = true
+        recognition.interimResults = false
+        recognition.lang = selectedLanguage
 
         recognition.onresult = (event) => {
           for (let i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
-              const text = event.results[i][0].transcript;
-              const speakerText = `${currentSpeaker === 'client' ? 'Client' : 'Advisor'}: ${text}\n`;
-              setTranscript(prev => prev + speakerText);
-              
+              const text = event.results[i][0].transcript
+              const timestamp = new Date().toLocaleTimeString()
+              const formattedText = `[${timestamp}] ${text}\n`
+
+              if (currentSpeaker === "client") {
+                setClientTranscript((prev) => prev + formattedText)
+              } else {
+                setAgentTranscript((prev) => prev + formattedText)
+              }
+
               // Analyze conversation
-              analyzeConversation(transcript + speakerText);
+              analyzeConversation(clientTranscript + agentTranscript + formattedText)
             }
           }
-        };
+        }
 
         recognition.onerror = (event) => {
-          console.error('Speech error:', event.error);
-          setIsRecording(false);
-        };
+          console.error("Speech error:", event.error)
+          setIsRecording(false)
+        }
 
         recognition.onend = () => {
-          setIsRecording(false);
-        };
+          setIsRecording(false)
+        }
 
-        recognitionRef.current = recognition;
+        recognitionRef.current = recognition
       }
     }
-  }, [currentSpeaker, transcript, selectedLanguage]);
 
-  const analyzeConversation = async (fullTranscript) => {
-    if (fullTranscript.length < 20) return;
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+    }
+  }, [currentSpeaker, clientTranscript, agentTranscript, selectedLanguage, isOpen])
 
-    setIsAnalyzing(true);
-    
+  const analyzeConversation = async (fullTranscript: string) => {
+    if (fullTranscript.length < 20) return
+
+    setIsAnalyzing(true)
+
     try {
-      const response = await fetch('/api/ai-voice-assist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript: fullTranscript })
-      });
+      const response = await fetch("/api/ai-voice-assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: fullTranscript }),
+      })
 
       if (response.ok) {
-        const analysis = await response.json();
-        
-        setSuggestions(analysis.suggestions || []);
-        setAlerts(analysis.alerts || []);
-        setLabelsItems(analysis.labelsItems || []);
+        const analysis = await response.json()
+        setSuggestions(analysis.suggestions || [])
+        setAlerts(analysis.alerts || [])
       } else {
-        setSuggestions(["Analysis temporarily unavailable"]);
+        setSuggestions(["Analysis temporarily unavailable"])
       }
     } catch (error) {
-      console.error('Analysis failed:', error);
-      setSuggestions(["Continue providing professional support to the client"]);
+      console.error("Analysis failed:", error)
+      setSuggestions(["Continue providing professional support to the client"])
     } finally {
-      setIsAnalyzing(false);
+      setIsAnalyzing(false)
     }
-  };
+  }
 
   const startRecording = () => {
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.start();
-        setIsRecording(true);
+        recognitionRef.current.start()
+        setIsRecording(true)
       } catch (error) {
-        console.error('Failed to start recording:', error);
-        alert(`Recording failed: ${error.message}. Please check microphone permissions.`);
+        console.error("Failed to start recording:", error)
+        alert(`Recording failed: ${error.message}. Please check microphone permissions.`)
       }
     } else {
-      alert('Speech recognition not supported. Please use Chrome or Edge browser and ensure you have microphone permissions.');
+      alert(
+        "Speech recognition not supported. Please use Chrome or Edge browser and ensure you have microphone permissions.",
+      )
     }
-  };
+  }
 
   const stopRecording = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      recognitionRef.current.stop()
     }
-    setIsRecording(false);
-  };
+    setIsRecording(false)
+  }
 
-  const clearAll = () => {
-    setTranscript('');
-    setSuggestions([]);
-    setAlerts([]);
-    setLabelsItems([]);
-  };
+  const clearTranscripts = () => {
+    setClientTranscript("")
+    setAgentTranscript("")
+    setSuggestions([])
+    setAlerts([])
+  }
 
-  const formatChange = (change) => {
-    const num = parseFloat(change);
-    const color = num >= 0 ? 'text-green-600' : 'text-red-600';
-    const symbol = num >= 0 ? '+' : '';
-    return <span className={color}>{symbol}{change}%</span>;
-  };
+  if (!isOpen) return null
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
         {/* Header */}
-        <h1 className="text-4xl font-bold text-center mb-8">UBS Client Advisor Assistant</h1>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+              <Mic className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Live Voice Transcript</h2>
+              <p className="text-sm text-gray-600">Real-time conversation analysis</p>
+            </div>
+          </div>
+          <Button onClick={onClose} variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
 
         {/* Controls */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="p-6 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            
             {/* Language Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Language:
-              </label>
+            <div className="flex items-center gap-2">
+              <Settings className="w-4 h-4 text-gray-600" />
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
                 disabled={isRecording}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:opacity-50"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:opacity-50 text-sm"
               >
                 {languages.map((lang) => (
                   <option key={lang.code} value={lang.code}>
@@ -154,89 +178,144 @@ export default function Home() {
             </div>
 
             {/* Speaker Toggle */}
-            <button
-              onClick={() => setCurrentSpeaker(currentSpeaker === 'client' ? 'advisor' : 'client')}
-              disabled={isRecording}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                currentSpeaker === 'client' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-green-500 text-white'
-              } disabled:opacity-50`}
-            >
-              {currentSpeaker === 'client' ? '👤 Client Speaking' : '🏦 Advisor Speaking'}
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Speaking:</span>
+              <Button
+                onClick={() => setCurrentSpeaker(currentSpeaker === "client" ? "agent" : "client")}
+                disabled={isRecording}
+                variant={currentSpeaker === "client" ? "default" : "secondary"}
+                size="sm"
+                className={
+                  currentSpeaker === "client"
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-green-600 hover:bg-green-700 text-white"
+                }
+              >
+                {currentSpeaker === "client" ? (
+                  <>
+                    <User className="w-4 h-4 mr-2" />
+                    Client
+                  </>
+                ) : (
+                  <>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Agent
+                  </>
+                )}
+              </Button>
+            </div>
 
-            {/* Recording Button */}
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              className={`px-8 py-3 rounded-lg font-bold text-white ${
-                isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-green-600 hover:bg-green-700'
-              }`}
-            >
-              {isRecording ? '⏹️ Stop Recording' : '▶️ Start Recording'}
-            </button>
+            {/* Recording Controls */}
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`${
+                  isRecording ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+                } text-white`}
+                size="sm"
+              >
+                {isRecording ? (
+                  <>
+                    <MicOff className="w-4 h-4 mr-2" />
+                    Stop Recording
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4 mr-2" />
+                    Start Recording
+                  </>
+                )}
+              </Button>
 
-            {/* Clear Button */}
-            <button
-              onClick={clearAll}
-              className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-            >
-              🗑️ Clear
-            </button>
+              <Button
+                onClick={clearTranscripts}
+                variant="outline"
+                size="sm"
+                className="text-gray-600 hover:text-gray-800 bg-transparent"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear
+              </Button>
+            </div>
+
+            {/* Recording Status */}
+            {isRecording && (
+              <div className="flex items-center gap-2 text-red-600">
+                <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">Recording...</span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Transcript */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-semibold mb-4">📝 Live Transcript</h2>
-            <div className="bg-gray-50 rounded border p-4 h-96 overflow-y-auto">
-              {transcript ? (
-                <div className="whitespace-pre-wrap">
-                  {transcript.split('\n').map((line, idx) => (
-                    <div key={idx} className={`mb-2 ${
-                      line.startsWith('Client:') ? 'text-blue-700' : 'text-green-700'
-                    }`}>
-                      {line}
-                    </div>
-                  ))}
-                </div>
+        <div className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden">
+          {/* Client Transcript */}
+          <div className="bg-blue-50 rounded-lg border border-blue-200 flex flex-col">
+            <div className="p-4 border-b border-blue-200 bg-blue-100">
+              <div className="flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
+                <h3 className="font-semibold text-blue-900">Client Transcript</h3>
+                <Badge variant="secondary" className="bg-blue-200 text-blue-800">
+                  {clientTranscript.split("\n").filter((line) => line.trim()).length} lines
+                </Badge>
+              </div>
+            </div>
+            <div className="flex-1 p-4 overflow-y-auto">
+              {clientTranscript ? (
+                <div className="whitespace-pre-wrap text-sm text-blue-900 font-mono">{clientTranscript}</div>
               ) : (
-                <div className="text-gray-500 text-center py-20">
-                  Click "Start Recording" to begin transcription
-                </div>
-              )}
-              
-              {isRecording && (
-                <div className="flex items-center mt-4">
-                  <span className="animate-pulse text-red-500 text-2xl">●</span>
-                  <span className="ml-2 text-gray-600">Recording...</span>
+                <div className="text-center text-blue-600 py-20">
+                  <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-sm">Client speech will appear here</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* AI Assistant */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-semibold">🤖 AI Assistant</h2>
-              {isAnalyzing && (
-                <div className="text-blue-600">
-                  <span className="animate-spin">⟳</span> Analyzing...
+          {/* Agent Transcript */}
+          <div className="bg-green-50 rounded-lg border border-green-200 flex flex-col">
+            <div className="p-4 border-b border-green-200 bg-green-100">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-green-600" />
+                <h3 className="font-semibold text-green-900">Bank Agent Transcript</h3>
+                <Badge variant="secondary" className="bg-green-200 text-green-800">
+                  {agentTranscript.split("\n").filter((line) => line.trim()).length} lines
+                </Badge>
+              </div>
+            </div>
+            <div className="flex-1 p-4 overflow-y-auto">
+              {agentTranscript ? (
+                <div className="whitespace-pre-wrap text-sm text-green-900 font-mono">{agentTranscript}</div>
+              ) : (
+                <div className="text-center text-green-600 py-20">
+                  <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-sm">Agent speech will appear here</p>
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+          {/* AI Analysis */}
+          <div className="bg-purple-50 rounded-lg border border-purple-200 flex flex-col">
+            <div className="p-4 border-b border-purple-200 bg-purple-100">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-purple-900">AI Analysis</h3>
+                {isAnalyzing && (
+                  <div className="text-purple-600 text-sm">
+                    <span className="animate-spin">⟳</span> Analyzing...
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex-1 p-4 overflow-y-auto space-y-4">
               {/* Alerts */}
               {alerts.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-red-600 mb-2">🚨 Alerts</h3>
+                  <h4 className="font-medium text-red-700 mb-2 text-sm">🚨 Alerts</h4>
                   {alerts.map((alert, idx) => (
-                    <div key={idx} className="bg-red-50 border border-red-200 rounded p-3 mb-2">
-                      <div className="text-red-800 text-sm">{alert}</div>
+                    <div key={idx} className="bg-red-100 border border-red-200 rounded p-3 mb-2">
+                      <div className="text-red-800 text-xs">{alert}</div>
                     </div>
                   ))}
                 </div>
@@ -245,35 +324,20 @@ export default function Home() {
               {/* Suggestions */}
               {suggestions.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-green-600 mb-2">💡 Suggestions</h3>
+                  <h4 className="font-medium text-green-700 mb-2 text-sm">💡 Suggestions</h4>
                   {suggestions.map((suggestion, idx) => (
-                    <div key={idx} className="bg-green-50 border border-green-200 rounded p-3 mb-2">
-                      <div className="text-green-800 text-sm">{suggestion}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {}
-             
-
-              {/* Labels Items */}
-              {labelsItems.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-purple-600 mb-2">📋 Labels Items</h3>
-                  {labelsItems.map((item, idx) => (
-                    <div key={idx} className="bg-purple-50 border border-purple-200 rounded p-3 mb-2">
-                      <div className="text-purple-800 text-sm">{item}</div>
+                    <div key={idx} className="bg-green-100 border border-green-200 rounded p-3 mb-2">
+                      <div className="text-green-800 text-xs">{suggestion}</div>
                     </div>
                   ))}
                 </div>
               )}
 
               {/* Empty State */}
-              {suggestions.length === 0 && alerts.length === 0 && labelsItems.length === 0 && !isAnalyzing && (
-                <div className="text-center text-gray-500 py-10">
-                  <div className="text-4xl mb-2">🎯</div>
-                  <div className="text-sm">Start recording to get AI assistance</div>
+              {suggestions.length === 0 && alerts.length === 0 && !isAnalyzing && (
+                <div className="text-center text-purple-600 py-20">
+                  <div className="text-4xl mb-4">🎯</div>
+                  <p className="text-sm">Start recording to get AI insights</p>
                 </div>
               )}
             </div>
@@ -281,5 +345,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-  );
+  )
 }

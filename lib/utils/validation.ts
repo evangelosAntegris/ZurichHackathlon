@@ -109,4 +109,3 @@ export function adjustScore(base: number, spanCount: number, hadKeyword: boolean
   // Clamp
   return Math.max(0, Math.min(1, score));
 }
-

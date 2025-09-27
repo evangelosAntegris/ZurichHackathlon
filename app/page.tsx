@@ -10,6 +10,7 @@ import { CalendarPanel } from "@/components/calendar-panel"
 import { ActionsPanel } from "@/components/actions-panel"
 import { ChatInterface } from "@/components/chat-interface"
 import { DataService } from "@/lib/data-service"
+import { VoiceTranscriptPopup } from "@/components/voice"
 import type { ChatMessage } from "@/lib/ai-service"
 import type { ClientProfile } from "@/lib/types"
 
@@ -21,6 +22,7 @@ export default function UBSDashboard() {
   const [aiResponse, setAiResponse] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [pipelineLabelsByConversation, setPipelineLabelsByConversation] = useState<Record<string, string[]>>({})
+  const [isVoicePopupOpen, setIsVoicePopupOpen] = useState(false)
 
   // On first load, select the first client
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function UBSDashboard() {
           setSelectedClientId(null)
         }
       } catch (error) {
-        console.error("Failed to load  clients:", error)
+        console.error("Failed to load clients:", error)
       }
     }
     init()
@@ -91,8 +93,7 @@ export default function UBSDashboard() {
     } catch (err) {
       console.error("[DialogueIQ] Failed to send query:", err)
       setAiResponse("Sorry, I couldn't complete that request. Please try again.")
-    }
-    finally {
+    } finally {
       setAiLoading(false)
     }
   }
@@ -103,7 +104,7 @@ export default function UBSDashboard() {
 
   return (
     <div className="h-screen flex flex-col bg-slate-50">
-      <UBSHeader onChatQuery={handleChatQuery} />
+      <UBSHeader onChatQuery={handleChatQuery} onVoiceTranscriptClick={() => setIsVoicePopupOpen(true)} />
 
       <div className="flex flex-1 overflow-hidden">
         <ClientSidebar
@@ -149,6 +150,8 @@ export default function UBSDashboard() {
       </div>
 
       <ChatInterface clientContext={clientProfile?.client} onNewMessage={handleNewChatMessage} />
+
+      <VoiceTranscriptPopup isOpen={isVoicePopupOpen} onClose={() => setIsVoicePopupOpen(false)} />
     </div>
   )
 }

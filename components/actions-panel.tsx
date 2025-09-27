@@ -1,4 +1,4 @@
- "use client"
+"use client"
 
 import { AlertTriangle, TrendingUp, Calendar, FileText } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

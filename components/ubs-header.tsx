@@ -11,9 +11,10 @@ import { useState } from "react"
 
 interface UBSHeaderProps {
   onChatQuery?: (query: string) => void
+  onVoiceTranscriptClick?: () => void // Added voice transcript callback
 }
 
-export function UBSHeader({ onChatQuery }: UBSHeaderProps) {
+export function UBSHeader({ onChatQuery, onVoiceTranscriptClick }: UBSHeaderProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -28,14 +29,7 @@ export function UBSHeader({ onChatQuery }: UBSHeaderProps) {
     <header className="bg-[#1e293b] text-white px-6 py-3 flex items-center justify-between border-b border-slate-700">
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
-          <Image
-            src="/ubs_logo.png"
-            alt="UBS Logo"
-            width={60}
-            height={60}
-            className="w-10 h-10 rounded-lg"
-            priority
-          />
+          <Image src="/ubs_logo.png" alt="UBS Logo" width={60} height={60} className="w-10 h-10 rounded-lg" priority />
           <h1 className="text-xl font-semibold">UBS DialogueIQ</h1>
         </div>
       </div>
@@ -54,7 +48,7 @@ export function UBSHeader({ onChatQuery }: UBSHeaderProps) {
 
       <div className="flex items-center gap-4">
         <Button
-          onClick={() => console.log("Start Voice Transcript clicked")}
+          onClick={onVoiceTranscriptClick} // Connected to popup handler
           className="bg-red-600 hover:bg-red-700 text-white border border-red-700/30"
           size="sm"
         >
