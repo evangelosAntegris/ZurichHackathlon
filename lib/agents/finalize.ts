@@ -16,7 +16,7 @@
  *   - labels_meta: rich meta for UI/debug (score_final, rationale, spans, threshold)
  */
 
-import type { Label, ValidatedLabel, EvidenceSpan } from "../types";
+import type { Label, ValidatedLabel, EvidenceSpan } from "../types/index";
 import { DEFAULT_THRESHOLDS } from "../config/thresholds";
 
 export interface FinalizeInput {

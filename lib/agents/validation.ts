@@ -10,7 +10,7 @@
  *   - VALIDATION_ALLOW_TIME_HINTS=0 -> disable time/date hints for schedule_meeting. Default: 1
  */
 
-import { EvidenceSpan, ValidatedLabel, CandidateLabel } from "../types";
+import { EvidenceSpan, ValidatedLabel, CandidateLabel } from "../types/index";
 import {
   isWhitelistedLabel,
   verifySpan,

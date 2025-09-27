@@ -13,7 +13,7 @@ import { llmCall } from "../llm";
 import { loadTxtPrompt } from "../prompts/loadTxtPrompt";
 import { wrapClassifierTxt } from "../prompts/wrapClassifierTxt";
 import { LABEL_SET, AllowedLabel } from "../constants/labels";
-import type { CandidateLabel, EvidenceSpan, Entities } from "../types";
+import type { CandidateLabel, EvidenceSpan, Entities } from "../types/index";
 
 // Minimal multilingual hints to create spans (same spirit as Validation Agent)
 const KEYWORDS: Record<string, RegExp> = {

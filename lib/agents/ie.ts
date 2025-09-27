@@ -10,7 +10,7 @@
  *   - Fallback: if LLM JSON parsing fails, derive naive requests from heuristics.
  */
 
-import { IEOutput, EvidenceSpan } from "../types";
+import { IEOutput, EvidenceSpan } from "../types/index";
 import { llmCall } from "../llm";
 import { extractEntitiesRuleBased } from "../utils/entities";
 import { findSpan } from "../utils/spans";

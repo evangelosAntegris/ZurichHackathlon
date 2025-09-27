@@ -24,7 +24,7 @@
 
 import fs from "fs/promises";
 import path from "path";
-import type { CandidateLabel, ValidatedLabel } from "../types";
+import type { CandidateLabel, ValidatedLabel } from "../types/index";
 import { finalizeAgent } from "./finalize";
 import { validationAgent } from "./validation";
 import { KEYWORDS } from "../utils/validation";
