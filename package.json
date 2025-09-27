@@ -8,6 +8,10 @@
     "lint": "next lint",
     "start": "next start"
   },
+  "engines": {
+  "node": "18.x",
+  "pnpm": "9.x"
+},
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
