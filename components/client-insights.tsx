@@ -15,6 +15,20 @@ export function ClientInsights({ selectedConversation, labels }: ClientInsightsP
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [loading, setLoading] = useState(false)
 
+  // Map backend label keys to human-readable labels for the UI
+  const labelMap: Record<string, string> = {
+    plan_contact: "Plan a follow-up contact",
+    schedule_meeting: "Schedule a meeting",
+    update_contact_info_non_postal: "Update contact info (non-postal)",
+    update_contact_info_postal_address: "Update postal address",
+    update_kyc_activity: "Update KYC: Activity",
+    update_kyc_origin_of_assets: "Update KYC: Origin of assets",
+    update_kyc_purpose_of_businessrelation: "Update KYC: Purpose of business relation",
+    update_kyc_total_assets: "Update KYC: Total assets",
+  }
+
+  const getDisplayLabel = (key: string) => labelMap[key] ?? key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+
   useEffect(() => {
     const loadConversation = async () => {
       if (!selectedConversation) {
@@ -82,7 +96,7 @@ export function ClientInsights({ selectedConversation, labels }: ClientInsightsP
                       key={label}
                       className="px-3 py-1.5 text-sm rounded-md bg-white/80 border border-indigo-100 text-slate-800 shadow-xs"
                     >
-                      {label}
+                      {getDisplayLabel(label)}
                     </span>
                   ))}
                 </div>

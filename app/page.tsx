@@ -131,7 +131,11 @@ export default function UBSDashboard() {
               selectedConversation={selectedConversation}
               labels={selectedConversation ? pipelineLabelsByConversation[selectedConversation] : undefined}
             />
-            <ActionsPanel clientId={selectedClientId} />
+            <ActionsPanel
+              clientId={selectedClientId}
+              labels={selectedConversation ? pipelineLabelsByConversation[selectedConversation] : undefined}
+              loading={!!selectedConversation && !pipelineLabelsByConversation[selectedConversation]}
+            />
 
             {/* Bottom Row: two columns with equal height */}
             <div className="h-full">
