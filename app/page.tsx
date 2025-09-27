@@ -33,7 +33,7 @@ export default function UBSDashboard() {
           setSelectedClientId(null)
         }
       } catch (error) {
-        console.error("Failed to load clients:", error)
+        console.error("Failed to load  clients:", error)
       }
     }
     init()
