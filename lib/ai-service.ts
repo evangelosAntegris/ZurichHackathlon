@@ -23,6 +23,7 @@ export class AIService {
   private constructor() {
     // Initialize with environment variable when available
     // this.apiKey = process.env.OPENAI_API_KEY || null
+    //
   }
 
   public static getInstance(): AIService {
