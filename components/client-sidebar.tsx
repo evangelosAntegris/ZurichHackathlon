@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from "react"
 import { DataService } from "@/lib/data-service"
 import type { Client, Conversation } from "@/lib/types"
 import { runLLMPipeline } from "@/lib/llm-pipeline-service"
+import type { PipelineResult } from "@/lib/agents/orchestrator"
 
 interface ClientSidebarProps {
   selectedClientId: string | null
@@ -24,7 +25,7 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
     conversationId: string | null
     loading: boolean
     error: string | null
-    result: any | null
+    result: PipelineResult | null
   }>({ conversationId: null, loading: false, error: null, result: null })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -241,8 +242,8 @@ export function ClientSidebar({ selectedClientId, onClientChange, selectedConver
                       <div className="text-xs text-slate-200 bg-slate-900/60 border border-slate-700 rounded p-2">
                         <p className="font-semibold mb-1">Labels finali</p>
                         <p className="text-slate-300">
-                          {Array.isArray(pipelineState.result?.fin?.labels_final)
-                            ? pipelineState.result.fin.labels_final.join(", ") || "Nessuna etichetta"
+                          {Array.isArray(pipelineState.result?.final?.labelsFinal)
+                            ? pipelineState.result.final.labelsFinal.join(", ") || "Nessuna etichetta"
                             : "Nessun dato disponibile"}
                         </p>
                       </div>

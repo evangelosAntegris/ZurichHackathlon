@@ -1,0 +1,18 @@
+{
+  "profile": "openai",
+  "samples": [
+    {
+      "sampleId": "sample-test",
+      "labels": [
+        "update_contact_info_non_postal",
+        "schedule_meeting"
+      ],
+      "flags": [],
+      "groundTruth": [
+        "update_contact_info_non_postal",
+        "schedule_meeting"
+      ]
+    }
+  ],
+  "accuracy": 1
+}

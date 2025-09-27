@@ -1,0 +1,129 @@
+{
+  "sampleId": "sample-1758966798732",
+  "config": {
+    "profile": "openai",
+    "provider": "openai"
+  },
+  "final": {
+    "labelsFinal": [
+      "update_contact_info_non_postal",
+      "schedule_meeting"
+    ],
+    "confidence": {
+      "update_contact_info_non_postal": 0.67,
+      "schedule_meeting": 0.72
+    },
+    "flags": [],
+    "summary": {
+      "modelsUsed": [
+        "gpt-4o-mini-2024-07-18",
+        "gpt-4o-mini-2024-07-18+gpt-4o-mini-2024-07-18"
+      ],
+      "latencyMs": 0,
+      "costEstimateUsd": 0
+    }
+  },
+  "gate": {
+    "decision": "use_agreement",
+    "candidate": {
+      "labels": [
+        "update_contact_info_non_postal",
+        "schedule_meeting"
+      ],
+      "evidence": [],
+      "logitInfo": {
+        "available": false
+      },
+      "meta": {
+        "modelId": "gpt-4o-mini-2024-07-18+gpt-4o-mini-2024-07-18",
+        "prompt": "zero_shot",
+        "usage": {
+          "promptTokens": 3580,
+          "completionTokens": 30,
+          "totalTokens": 3610
+        },
+        "agreedBy": [
+          "gpt-4o-mini-2024-07-18",
+          "gpt-4o-mini-2024-07-18"
+        ]
+      }
+    },
+    "rationale": "Classifier A and B agree on predicted labels"
+  },
+  "scores": {
+    "scoresYesNo": {
+      "plan_contact": 0.9,
+      "schedule_meeting": 0.9,
+      "update_contact_info_non_postal": 0.9,
+      "update_contact_info_postal_address": 0.1,
+      "update_kyc_activity": 0.1,
+      "update_kyc_origin_of_assets": 0.1,
+      "update_kyc_purpose_of_businessrelation": 0.1,
+      "update_kyc_total_assets": 0.1
+    },
+    "meta": {
+      "scoringModel": "gpt-4o-mini",
+      "calls": 8,
+      "latencyMs": 0,
+      "provider": "openai",
+      "usage": [
+        {
+          "promptTokens": 1061,
+          "completionTokens": 1,
+          "totalTokens": 1062
+        },
+        {
+          "promptTokens": 1056,
+          "completionTokens": 1,
+          "totalTokens": 1057
+        },
+        {
+          "promptTokens": 1057,
+          "completionTokens": 1,
+          "totalTokens": 1058
+        },
+        {
+          "promptTokens": 1055,
+          "completionTokens": 1,
+          "totalTokens": 1056
+        },
+        {
+          "promptTokens": 1056,
+          "completionTokens": 1,
+          "totalTokens": 1057
+        },
+        {
+          "promptTokens": 1058,
+          "completionTokens": 1,
+          "totalTokens": 1059
+        },
+        {
+          "promptTokens": 1058,
+          "completionTokens": 1,
+          "totalTokens": 1059
+        },
+        {
+          "promptTokens": 1057,
+          "completionTokens": 1,
+          "totalTokens": 1058
+        }
+      ]
+    }
+  },
+  "evidence": {
+    "verifiedLabels": [
+      "update_contact_info_non_postal",
+      "schedule_meeting"
+    ],
+    "perLabelConfidence": {
+      "update_contact_info_non_postal": 0.67,
+      "schedule_meeting": 0.72
+    },
+    "evidenceQuotes": {},
+    "issues": [],
+    "explainabilityForAdvisor": {
+      "update_contact_info_non_postal": "\"u're using. Can you tell me the version number or specifics about the platform? And wh\"",
+      "schedule_meeting": "\"alize the schedulin g for your upcoming meeting afterward.\nSpeaker 1:Yes, uh, it's very\""
+    }
+  }
+}

@@ -1,0 +1,367 @@
+## 1) Obiettivo della migrazione
+
+1. **Accuratezza** multilabel con recall alto (FN penalizzati > FP).
+2. **Costo/latency** sotto controllo: SLM rapidi per i casi facili, **Heavy LLM** *solo se* A≠B.
+3. **Auditabilità**: evidenze testuali con **quote + span** per ciascuna label (“why” breve, verificabile).
+4. **Comparazione** corretta **OpenAI ↔ Apertus** (stessa pipeline, config diverse).
+5. **Valutazione** finale con metrica ufficiale (già presente).
+
+---
+
+## 2) Nuova architettura (pipeline 1→10)
+
+```
+1) Text Cleaner
+2) Language Router (opzionale)
+3) Classifier-A (SLM, zero-shot)
+4) Classifier-B (SLM, few-shot)
+5) Disagreement Gate (se A≠B → Heavy)
+6) Classifier-Heavy (LLM, solo su disaccordo)
+7) Label Scorer (YES/NO logprobs su tutte le 8 label)
+8) Evidence Checker (regole + micro-SLM opz. per quotes)
+9) Label Finalizer (soglie, flag dubbi, cost/latency)
+10) Logging / Metrics / Evaluation
+```
+---
+
+## 3) Delta architetturale (cosa cambia rispetto all’attuale)
+
+| Step attuale           | Nuovo step                                    | Azione/Migrazione                                                                           |
+| ---------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `preprocessing`        | **1) Text Cleaner** + **2) Language Router**  | Split: cleaning minimale e router lingua con traduzione opzionale (Supertext).              |
+| `ie (Intent & Entity)` | (opzionale)                                   | Può rimanere come supporto al ruleset dell’Evidence Checker (non più blocco centrale).      |
+| `classifier` (unico)   | **3) Classifier-A** + **4) Classifier-B**     | Due viste SLM: A zero-shot, B few-shot. Stesso schema JSON di output.                       |
+| —                      | **5) Disagreement Gate**                      | Nuovo: se A≠B → chiama Heavy.                                                               |
+| —                      | **6) Classifier-Heavy (LLM few-shot)**        | Nuovo: prompt con esempi curati per casi ambigui.                                           |
+| `validation`           | **7) Label Scorer** + **8) Evidence Checker** | Split: 7) calcolo P(YES) per ogni label via logprobs; 8) regole+quotes+fusione confidenza.  |
+| `finalize`             | **9) Label Finalizer**                        | Consuma la confidenza dell’EC, applica soglie e flagga i dubbi.                             |
+| `eval_pipeline.ts`     | **10) Logging/Metrics/Evaluation**            | Restano test/eval; logging per comparazioni OpenAI↔Apertus.                                 |
+| —                      | **Runner di confronto** (fuori pipeline)      | Script che esegue la pipeline con 2 config (OpenAI/Apertus) e genera i grafici comparativi. |
+
+---
+
+## 4) Struttura cartelle aggiornata
+
+```
+lib/
+  agents/
+    text-cleaner.ts               // (1)
+    language-router.ts            // (2)
+    classifier-a.ts               // (3) SLM zero-shot
+    classifier-b.ts               // (4) SLM few-shot
+    disagreement-gate.ts          // (5)
+    classifier-heavy.ts           // (6) LLM to resolve disagreements between A & B classifiers
+    label-scorer.ts               // (7) YES/NO logprobs
+    evidence-checker.ts           // (8) rules + quote extractor opz.
+    finalizer.ts                  // (9)
+    orchestrator.ts               // chiama 1→9
+  compare/
+    run_and_compare.ts            // chiama 1→10 con config openai & apertus 
+    charts.ts                     // grafici costo/accuracy/latency/escalation
+  llm/
+    openai.ts                     // wrapper OpenAI (JSON out, logprobs se possibile)
+    apertus.ts                    // wrapper Apertus/HF (logits/logprobs)
+    provider-router.ts            // switch per provider e modelli
+  config/
+    profiles
+      openai.ts                 
+      apertus.ts
+      mixed.ts
+    thresholds.ts                 // soglie default/KYC (fallback)
+  constants/
+    labels.ts
+    prompts.ts
+    label_scorer_yesno.ts
+  types/
+    pipeline.ts                   // interfacce I/O per ogni step
+  utils/
+    text.ts                       // cleaning semplice
+    lang.ts                       // detect lingua e helper
+    evidence_rules.ts             // trigger/anti-trigger per label
+    scoring.ts                    // calcolo P(YES), fusione confidenza
+    cost.ts                       // stima costo/token e latenza
+data-service.ts
+eval_pipeline.ts
+```
+
+---
+
+## 5) Interfacce I/O (TypeScript) — **essenziali**
+
+```ts
+// types/pipeline.ts
+export type Label =
+  | "plan_contact"
+  | "schedule_meeting"
+  | "update_contact_info_non_postal"
+  | "update_contact_info_postal_address"
+  | "update_kyc_activity"
+  | "update_kyc_origin_of_assets"
+  | "update_kyc_purpose_of_businessrelation"
+  | "update_kyc_total_assets";
+
+export interface SampleIn {
+  sampleId: string;
+  path: string;
+  rawText: string;
+}
+
+export interface CleanOut {
+  sampleId: string;
+  cleanText: string;
+  stats: { charCount: number };
+}
+
+export interface RoutedOut {
+  sampleId: string;
+  textForModel: string;
+  sourceLang: "en"|"de"|"it"|"fr"|"mixed";
+  translated: boolean;
+  translatorProvider: "supertext"|"none";
+  routingHint: "original_en"|"translated_en";
+}
+
+export interface EvidenceItem {
+  label: Label;
+  quote?: string;                        // ≤ 140 char
+  span?: { start: number; end: number }; // opz, validata poi
+  hint?: string;                         // trigger id (es. "inherit")
+}
+
+export interface ClassifierOut {
+  labels: Label[];
+  evidence: EvidenceItem[];
+  logitInfo?: { available: boolean };
+  meta: { modelId: string; prompt: "zero_shot"|"few_shot"|"heavy" };
+}
+
+export interface GateOut {
+  decision: "use_agreement" | "escalate_heavy";
+  candidate?: { labels: Label[]; evidence: EvidenceItem[]; meta: any };
+}
+
+export interface ScorerOut {
+  scoresYesNo: Partial<Record<Label, number>>; // 0..1
+  meta: { scoringModel: string; calls: number; latencyMs: number };
+}
+
+export interface EvidenceCheckOut {
+  verifiedLabels: Label[];
+  perLabelConfidence: Partial<Record<Label, number>>;
+  evidenceQuotes: Partial<Record<Label, EvidenceItem[]>>;
+  issues: string[];
+  explainabilityForAdvisor: Partial<Record<Label, string>>;
+}
+
+export interface FinalOut {
+  labelsFinal: Label[];
+  confidence: Partial<Record<Label, number>>;
+  flags: string[]; // es. ["human_review_recommended"]
+  summary: { modelsUsed: string[]; latencyMs: number; costEstimateUsd: number };
+}
+```
+
+---
+
+## 6) Orchestrator — flusso (pseudo-TS)
+
+```ts
+// lib/agents/orchestrator.ts
+export async function runPipeline(sample: SampleIn, cfg: Config): Promise<FinalOut> {
+  const cleaned = await textCleaner(sample);
+  const routed  = await languageRouter(cleaned, cfg);
+
+  const a = await classifierA(routed, cfg);   // SLM zero-shot
+  const b = await classifierB(routed, cfg);   // SLM few-shot
+
+  const gate = disagreementGate(a, b);
+  const candidate =
+    gate.decision === "use_agreement"
+      ? gate.candidate!
+      : await classifierHeavy(routed, cfg);   // LLM few-shot, solo su disaccordo
+
+  const scores = await labelScorer(routed, cfg);  // YES/NO su tutte e 8 le label
+
+  const verified = await evidenceChecker(
+    { ...candidate, scoresYesNo: scores.scoresYesNo },
+    routed,
+    cfg
+  );
+
+  const final = await finalizer(verified, cfg);
+  await logAndEvaluate(sample, a, b, gate, candidate, scores, verified, final, cfg);
+  return final;
+}
+```
+
+---
+
+## 7) Prompt — Heavy LLM (few-shot) **concreto**
+
+**prompts/prompt_heavy.txt**
+
+```
+You are a Swiss banking assistant. Classify client–advisor transcripts into one or more of:
+["plan_contact","schedule_meeting","update_contact_info_non_postal",
+ "update_contact_info_postal_address","update_kyc_activity",
+ "update_kyc_origin_of_assets","update_kyc_purpose_of_businessrelation",
+ "update_kyc_total_assets"].
+
+Rules:
+- Assign a label only if there is explicit, actionable evidence to log.
+- Security verification alone (e.g., “confirm DOB/address”) is NOT an update.
+- Return STRICT JSON only: {"labels":[...],"evidence":[{"label":"L","quote":"..."}]}.
+
+```
+
+> A/B usano: `prompt_zero_shot.txt` (regole secche) e `prompt_few_shot.txt` (2 mini-esempi mirati).
+
+---
+
+## 8) Label Scorer (YES/NO logprobs) — logica
+
+* Per ciascuna delle 8 label: prompt **binario**
+  “Answer with a single token: YES or NO. Does the transcript imply `<label>`?”
+* Legge i **logprobs** del primo token (“YES”, “NO”) e calcola `P(YES)`.
+* Se il provider non espone logprobs/logits → `scoresYesNo = null` e l’EC userà proxy (accordo A/B/Heavy + trigger + qualità quote).
+
+---
+
+## 9) Evidence Checker — compiti
+
+1. **Verifica quote/span** (se presenti) o **estrazione** via regole → micro-SLM opzionale (una chiamata) solo se necessario.
+2. **Trigger/anti-trigger** per ogni label (es. “verifica anagrafica” ≠ update).
+3. **Fusione confidenza** (esempio):
+
+   ```
+   conf(L) = 0.55 * P_yesno(L)
+           + 0.25 * trigger_score(L)
+           + 0.15 * quote_quality(L)
+           + 0.05 * agreement_weight(L)
+   ```
+4. **Explainability breve** per advisor: una frase con la **short quote**.
+
+---
+
+## 10) Finalizer — compiti
+
+* Applica soglie: `default_conf = 0.60`, `kyc_conf = 0.70` (configurabili, considerando come è strutturata la funzione di evaluate).
+* **Flags**: `human_review_recommended` se confidenza borderline o disaccordo A/B risolto a fatica.
+* **Contabilità**: modelli usati, latenza totale, costo stimato.
+
+---
+
+## 11) Configurazioni provider (YAML)
+
+**configs/openai.yaml**
+
+```yaml
+provider: openai
+models:
+  light: gpt-5-nano
+  light_alt: gpt-5-nano   # opz: gpt-5-mini
+  heavy: gpt-5
+classification:
+  prompt_a_path: prompts/prompt_zero_shot.txt
+  prompt_b_path: prompts/prompt_few_shot.txt
+  require_logprobs: true
+router:
+  translate_if_non_en: true
+  translator: supertext
+thresholds:
+  default_conf: 0.60
+  kyc_conf: 0.70
+scoring:
+  enabled: true
+  provider: openai
+  model: gpt-5-nano
+  top_logprobs: 2
+  parallelism: 4
+  timeout_ms: 15000
+evidence_checker:
+  mode: rules+slm_optional
+  extractor_model: gpt-5-nano
+  max_slm_calls: 1
+logging:
+  out_dir: experiments
+  save_debug_prompts: true
+evaluation:
+  split: validation
+```
+
+**configs/apertus.yaml**
+
+```yaml
+provider: apertus
+models:
+  light: apertus-8b-instruct
+  light_alt: apertus-8b-instruct
+  heavy: apertus-70b-instruct
+# resto identico
+```
+
+**configs/mixed.yaml** (dopo i test singoli)
+
+```yaml
+provider: mixed
+models:
+  light: apertus-8b-instruct
+  light_alt: gpt-5-nano
+  heavy: gpt-5
+scoring:
+  provider: openai     # scorer unico per calibrazione uniforme
+  model: gpt-5-nano
+  top_logprobs: 2
+```
+
+---
+
+## 12) Confronto OpenAI ↔ Apertus (runner esterno)
+
+**compare/run_and_compare.ts**
+
+* Esegue la pipeline 1→10 con `configs/openai.yaml` → salva `experiments/metrics/openai_summary.json`
+* Esegue la pipeline con `configs/apertus.yaml` → salva `experiments/metrics/apertus_summary.json`
+* Produce grafici (PNG) da `compare/charts.ts`:
+
+  * **Accuracy (UBS2 score)** vs **Costo**
+  * **Accuracy** vs **Latenza**
+  * **% Escalations** a Heavy
+  * **Per-label confusion** (evidenziare FN)
+
+---
+
+## 13) Ottimizzazioni chiave
+
+* **Costo/tempo**: SLM A/B → Heavy solo su disaccordo; Label Scorer low-temp logprobs.
+* **Stabilità**: B few-shot complementa A zero-shot; Heavy few-shot su casi duri.
+* **Audit & Compliance**: quote+span verificate; anti-trigger per evitare FP su verifiche anagrafiche.
+* **Semplicità**: nessun ottimizzatore online; tutto in logging/metrics/evaluation.
+
+---
+
+## 14) Roadmap di migrazione (step-by-step)
+
+1. **Cartelle & tipi**: creare nuovi file in `lib/agents/` e `types/pipeline.ts`.
+2. **Provider**: implementare `llm/openai.ts` e `llm/apertus.ts` con interfaccia comune; `provider-router.ts`.
+3. **Classifier A/B/Heavy**: spostare l’attuale `classifier` in A/B; creare Heavy con prompt few-shot.
+4. **Disagreement Gate**: modulo semplice che confronta set(A.labels) vs set(B.labels).
+5. **Label Scorer**: implementare YES/NO con logprobs/logits; fallback se non disponibili.
+6. **Evidence Checker**: portare l’attuale `validation` → regole & quote; aggiungere micro-SLM extractor opzionale.
+7. **Finalizer**: usare confidenze dall’EC + soglie config; aggiungere flags e cost accounting.
+8. **Orchestrator**: aggiornare la catena 1→9.
+9. **Logging/Metrics/Eval**: arricchire `eval_pipeline.ts` o creare `logAndEvaluate()`; salvare JSONL/summary.
+10. **Runner confronto**: `compare/run_and_compare.ts` + `compare/charts.ts`.
+
+---
+
+## 15) Esecuzione (concetto)
+
+* **OpenAI**
+  `pnpm tsx lib/compare/run_and_compare.ts --profile openai`
+* **Apertus**
+  `pnpm tsx lib/compare/run_and_compare.ts --profile apertus`
+* **Mixed (facoltativo)**
+  `pnpm tsx lib/compare/run_and_compare.ts --profile mixed`
+
+Ogni run scrive log per-sample e un summary con score ufficiale (`evaluate_predictions`), costi, latenze e grafici.

@@ -24,6 +24,9 @@ import path from "path";
 
 // ⚠️ UPDATE THIS IMPORT PATH if your orchestrator `run(...)` lives elsewhere.
 import { orchestratorRun } from "./orchestrator";
+import { OPENAI_PROFILE } from "@/lib/config/profiles/openai";
+import { APERTUS_PROFILE } from "@/lib/config/profiles/apertus";
+import { MIXED_PROFILE } from "@/lib/config/profiles/mixed";
 
 // Allowed UBS labels (exact ids & order must match the official evaluator)
 const ALLOWED_LABELS = [
@@ -196,8 +199,13 @@ function singleSampleBreakdown(yTrue: string[], yPred: string[]) {
     console.error("[error] --file <path-to-.txt> is required");
     process.exit(1);
   }
-  const promptPath = (a.prompt as string) || "lib/prompts/classifier.txt";
   const fileJson = (a.json as string) || fileTxt.replace(/\.txt$/i, ".json");
+  const profileName = typeof a.profile === "string" ? (a.profile as string) : "openai";
+  const config = profileName === "apertus"
+    ? APERTUS_PROFILE
+    : profileName === "mixed"
+      ? MIXED_PROFILE
+      : OPENAI_PROFILE;
   const dump = !!a.dump;
 
   // Read files
@@ -208,11 +216,11 @@ function singleSampleBreakdown(yTrue: string[], yPred: string[]) {
   }
   const gtText = await readIf(fileJson);
 
-  // Run full pipeline (Agents 1→5)
-  const { prep, ie, clf, val, fin } = await orchestratorRun(txt, promptPath);
+  // Run full pipeline (Agents 1→10)
+  const { final, debug } = await orchestratorRun(txt, { config });
 
   // Prepare predictions & ground-truth
-  const yPred = fin.labels_final;
+  const yPred = final.labelsFinal;
   const yTrue = gtText ? extractTrueLabels(gtText) : [];
 
   // Evaluate with the official function (batch of 1)
@@ -226,8 +234,8 @@ function singleSampleBreakdown(yTrue: string[], yPred: string[]) {
     input: {
       file_txt: fileTxt,
       file_json: gtText ? fileJson : "(missing)",
-      prompt: promptPath,
-      transcript_preview: prep.transcript_clean.slice(0, 220) + (prep.transcript_clean.length > 220 ? "…" : ""),
+      prompt: debug.candidate.meta?.prompt ?? "unknown",
+      transcript_preview: debug.cleaned.cleanText.slice(0, 220) + (debug.cleaned.cleanText.length > 220 ? "…" : ""),
     },
     y_true: yTrue,
     y_pred: yPred,
@@ -238,10 +246,12 @@ function singleSampleBreakdown(yTrue: string[], yPred: string[]) {
 
   if (dump) {
     result.intermediate = {
-      requests: ie.requests,
-      candidates: clf.candidates,
-      validated: val.validated,
-      labels_meta: fin.labels_meta,
+      classifier_a: debug.classifierA,
+      classifier_b: debug.classifierB,
+      gate: debug.gate,
+      candidate: debug.candidate,
+      scorer: debug.scorer,
+      evidence: debug.evidence,
     };
   }
 

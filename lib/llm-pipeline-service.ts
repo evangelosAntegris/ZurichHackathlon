@@ -1,18 +1,26 @@
 import { DataService } from "@/lib/data-service"
+import type { PipelineResult } from "@/lib/agents/orchestrator"
 
 interface PipelineResponse {
   conversationId?: string
-  result: any
+  result: PipelineResult
 }
 
-export const runLLMPipeline = async (conversationId: string): Promise<PipelineResponse> => {
+interface RunOptions {
+  profile?: "openai" | "apertus" | "mixed"
+}
+
+export const runLLMPipeline = async (
+  conversationId: string,
+  options: RunOptions = {},
+): Promise<PipelineResponse> => {
   try {
     const conversation = await DataService.getConversationById(conversationId)
     let transcript = conversation?.transcript
     let transcriptSource = conversation?.transcript ? "supabase" : "sample"
 
     if (!transcript) {
-      const sampleResponse = await fetch("/test.txt")
+      const sampleResponse = await fetch("/test1.txt")
       if (!sampleResponse.ok) {
         throw new Error("Impossibile recuperare il transcript di test (public/test.txt).")
       }
@@ -26,6 +34,7 @@ export const runLLMPipeline = async (conversationId: string): Promise<PipelineRe
         conversationId,
         transcript,
         transcriptSource,
+        profile: options.profile,
       }),
     })
 

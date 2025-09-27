@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { orchestratorRun } from "@/lib/agents/orchestrator"
+import { OPENAI_PROFILE } from "@/lib/config/profiles/openai"
+import { APERTUS_PROFILE } from "@/lib/config/profiles/apertus"
+import { MIXED_PROFILE } from "@/lib/config/profiles/mixed"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -7,7 +10,7 @@ export const maxDuration = 60
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { transcript, raw, classifierPromptPath, conversationId } = body || {}
+    const { transcript, raw, conversationId, transcriptSource, profile } = body || {}
 
     const rawTranscript = typeof transcript === "string" && transcript.trim().length
       ? transcript
@@ -22,10 +25,17 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const result = await orchestratorRun(
-      rawTranscript,
-      typeof classifierPromptPath === "string" ? classifierPromptPath : undefined,
-    )
+    let config = OPENAI_PROFILE
+    if (profile === "apertus") {
+      config = APERTUS_PROFILE
+    } else if (profile === "mixed") {
+      config = MIXED_PROFILE
+    }
+
+    const result = await orchestratorRun(rawTranscript, {
+      config,
+      transcriptSource: typeof transcriptSource === "string" ? transcriptSource : undefined,
+    })
 
     return NextResponse.json({
       conversationId: typeof conversationId === "string" ? conversationId : undefined,

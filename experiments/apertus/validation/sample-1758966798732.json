@@ -1,0 +1,122 @@
+{
+  "sampleId": "sample-1758966798732",
+  "config": {
+    "profile": "apertus",
+    "provider": "apertus"
+  },
+  "final": {
+    "labelsFinal": [
+      "plan_contact",
+      "schedule_meeting",
+      "update_contact_info_non_postal",
+      "update_contact_info_postal_address"
+    ],
+    "confidence": {
+      "plan_contact": 0.783,
+      "schedule_meeting": 0.783,
+      "update_contact_info_non_postal": 0.623,
+      "update_contact_info_postal_address": 0.623
+    },
+    "flags": [
+      "heavy_model_used"
+    ],
+    "summary": {
+      "modelsUsed": [
+        "apertus-8b-instruct",
+        "apertus-70b-instruct"
+      ],
+      "latencyMs": 0,
+      "costEstimateUsd": 0
+    }
+  },
+  "gate": {
+    "decision": "escalate_heavy",
+    "rationale": "Classifier A and B disagree on predicted labels"
+  },
+  "scores": {
+    "scoresYesNo": {
+      "plan_contact": 0.85,
+      "schedule_meeting": 0.85,
+      "update_contact_info_non_postal": 0.65,
+      "update_contact_info_postal_address": 0.65,
+      "update_kyc_activity": 0.1,
+      "update_kyc_origin_of_assets": 0.1,
+      "update_kyc_purpose_of_businessrelation": 0.1,
+      "update_kyc_total_assets": 0.1
+    },
+    "meta": {
+      "scoringModel": "apertus-8b-instruct",
+      "calls": 8,
+      "latencyMs": 0,
+      "provider": "apertus",
+      "usage": []
+    }
+  },
+  "evidence": {
+    "verifiedLabels": [
+      "plan_contact",
+      "schedule_meeting",
+      "update_contact_info_non_postal",
+      "update_contact_info_postal_address"
+    ],
+    "perLabelConfidence": {
+      "plan_contact": 0.783,
+      "schedule_meeting": 0.783,
+      "update_contact_info_non_postal": 0.623,
+      "update_contact_info_postal_address": 0.623
+    },
+    "evidenceQuotes": {
+      "plan_contact": [
+        {
+          "label": "plan_contact",
+          "quote": "g concerns and so me questions about my contact info and scheduling a eeting.\nSpeaker 2",
+          "hint": "trigger",
+          "span": {
+            "start": 404,
+            "end": 411
+          }
+        }
+      ],
+      "schedule_meeting": [
+        {
+          "label": "schedule_meeting",
+          "quote": "alize the schedulin g for your upcoming meeting afterward.\nSpeaker 1:Yes, uh, it's very",
+          "hint": "trigger",
+          "span": {
+            "start": 2303,
+            "end": 2310
+          }
+        }
+      ],
+      "update_contact_info_non_postal": [
+        {
+          "label": "update_contact_info_non_postal",
+          "quote": "u're using. Can you tell me the version number or specifics about the platform? And wh",
+          "hint": "trigger_with_anti",
+          "span": {
+            "start": 936,
+            "end": 942
+          }
+        }
+      ],
+      "update_contact_info_postal_address": [
+        {
+          "label": "update_contact_info_postal_address",
+          "quote": "h. So, sure, my da te of is DATE and my address is ADDRESS.\nSpeaker 2:Thank you for con",
+          "hint": "trigger_with_anti",
+          "span": {
+            "start": 725,
+            "end": 732
+          }
+        }
+      ]
+    },
+    "issues": [],
+    "explainabilityForAdvisor": {
+      "plan_contact": "\"g concerns and so me questions about my contact info and scheduling a eeting.\nSpeaker 2\"",
+      "schedule_meeting": "\"alize the schedulin g for your upcoming meeting afterward.\nSpeaker 1:Yes, uh, it's very\"",
+      "update_contact_info_non_postal": "\"u're using. Can you tell me the version number or specifics about the platform? And wh\"",
+      "update_contact_info_postal_address": "\"h. So, sure, my da te of is DATE and my address is ADDRESS.\nSpeaker 2:Thank you for con\""
+    }
+  }
+}

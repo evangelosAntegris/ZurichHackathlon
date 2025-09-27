@@ -1,0 +1,48 @@
+{
+  "chartData": [
+    {
+      "profile": "openai",
+      "accuracy": 1,
+      "costUsd": 0,
+      "latencyMs": 0,
+      "heavyEscalationRate": 0
+    },
+    {
+      "profile": "apertus",
+      "accuracy": 0.8,
+      "costUsd": 0,
+      "latencyMs": 0,
+      "heavyEscalationRate": 1
+    }
+  ],
+  "summaries": [
+    {
+      "profile": "openai",
+      "accuracy": 1,
+      "costUsd": 0,
+      "latencyMs": 0,
+      "heavyEscalationRate": 0,
+      "perLabelCounts": {
+        "avg_labels": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        }
+      }
+    },
+    {
+      "profile": "apertus",
+      "accuracy": 0.8,
+      "costUsd": 0,
+      "latencyMs": 0,
+      "heavyEscalationRate": 1,
+      "perLabelCounts": {
+        "avg_labels": {
+          "tp": 2,
+          "fp": 2,
+          "fn": 0
+        }
+      }
+    }
+  ]
+}

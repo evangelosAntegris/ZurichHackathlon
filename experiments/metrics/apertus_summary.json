@@ -1,0 +1,22 @@
+{
+  "profile": "apertus",
+  "samples": [
+    {
+      "sampleId": "sample-test",
+      "labels": [
+        "plan_contact",
+        "schedule_meeting",
+        "update_contact_info_non_postal",
+        "update_contact_info_postal_address"
+      ],
+      "flags": [
+        "heavy_model_used"
+      ],
+      "groundTruth": [
+        "update_contact_info_non_postal",
+        "schedule_meeting"
+      ]
+    }
+  ],
+  "accuracy": 0.8
+}
