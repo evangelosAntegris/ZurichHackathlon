@@ -1,30 +1,102 @@
-# Client insights UI
+# 📈 DialogueIQ — Turning Client Conversations Into Growth  
+### *AI-powered assistant for UBS wealth advisors*
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+DialogueIQ transforms unstructured client conversations into **clear, prioritized, and growth-driving advisor actions**.  
+By automating admin work and surfacing the most meaningful opportunities, it helps advisors spend more time where it matters: **building stronger client relationships**.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/evangelosmakris-antegriscoms-projects/v0-ubs-hackathlon)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/VIBU8LKkxBa)
+Built for the **UBS challenge** at the **Swiss AI Weeks Hackathon 2025**.
 
-## Overview
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## 🚨 Why DialogueIQ?
 
-## Deployment
+Wealth advisors lose hours every week to:
 
-Your project is live at:
+- Manual notes  
+- CRM updates  
+- Scattered insights  
+- Missed opportunities hidden inside conversations  
+- Lack of time for deeper client connections  
 
-**[https://vercel.com/evangelosmakris-antegriscoms-projects/v0-ubs-hackathlon](https://vercel.com/evangelosmakris-antegriscoms-projects/v0-ubs-hackathlon)**
+DialogueIQ solves this by analyzing conversations and showing advisors exactly **where — and how — to focus**.
 
-## Build your app
 
-Continue building your app on:
+## 🧠 What DialogueIQ Does
 
-**[https://v0.app/chat/projects/VIBU8LKkxBa](https://v0.app/chat/projects/VIBU8LKkxBa)**
+- Ingests client conversations (transcripts or notes)  
+- Runs a **multi-agent AI pipeline** to extract:  
+  - Action items  
+  - Opportunities  
+  - Follow-ups  
+  - Risk signals  
+  - Client concerns  
+- Prioritizes tasks based on urgency, impact, and relationship relevance  
+- Updates the system automatically  
+- Presents a clear dashboard showing:  
+  - What to do  
+  - Why it matters  
+  - Which client needs attention next  
 
-## How It Works
+**It turns conversations into growth.**
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## ✨ Features
+
+### 🔹 Multi-Agent Intelligence  
+A coordinated system of AI agents handles extraction, classification, prioritization, and rationale generation.
+
+### 🔹 Advisor-Focused Dashboard  
+Frontend built with **v0 + TypeScript**, optimized for clarity and signal over noise.
+
+### 🔹 Automated Admin  
+Insights, summaries, and follow-ups are persisted in **Supabase**.
+
+### 🔹 Instant Deployment  
+Hosted on **Vercel** for low-latency demos and testing.
+
+## 🛠 Tech Stack
+
+- **Frontend:** v0 (AI-generated UI), TypeScript  
+- **AI Engine:** Multi-agent system (OpenAI API)  
+- **Database:** Supabase  
+- **Hosting:** Vercel
+
+## 🧭 Architecture Overview
+
+```
+Conversation Transcript
+          ↓
+  Multi-Agent AI Pipeline
+  (Extraction → Classification → Prioritization)
+          ↓
+   Supabase (Clients, Insights, Actions)
+          ↓
+      v0/TypeScript Dashboard
+          ↓
+ Advisor sees top priorities instantly
+```
+
+## 🚀 Getting Started
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/<your-username>/dialogueiq
+cd dialogueiq
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Environment variables
+Create a `.env` file:
+
+```
+OPENAI_API_KEY=<your-key>
+SUPABASE_URL=<your-url>
+SUPABASE_KEY=<your-key>
+```
+
+### 4. Run the dev server
+```bash
+npm run dev
+```
